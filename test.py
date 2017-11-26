@@ -1,10 +1,5 @@
-
-
 import networkx as nx
 import matplotlib.pyplot as plt
-
-import pickle
-
 
 class MetroNode():
 
@@ -43,17 +38,13 @@ G = nx.DiGraph()
 # Create a digraph with the nodes from the node file
 nodes_file_name = "nodes.txt"
 nodes_file = open(nodes_file_name, "r")
-
-for line in nodes_file:
-    G.add_node(line.strip())
-
-# G.add_nodes_from(['Paulina','Clinton','Kedzie'])
+G.add_nodes_from([MetroNode(line.strip()) for line in nodes_file])
 
 # Print the nodes
 # for node in G.nodes:
-#     print(node, end = ", ")
+#     print(node)
 
-lines_files = ['blue.txt', 'brown.txt', 'green.txt', 'orange.txt', 'pink.txt', 'purple.txt', 'yellow.txt', 'red.txt']
+lines_files = ['brown.txt']#, 'blue.txt']
 delimiter = ","
 
 for metro_line in lines_files:
@@ -62,34 +53,23 @@ for metro_line in lines_files:
     elist = []
 
     for txt_line in curr_file:
-        # print("txt_line before = \n\n", str(txt_line))
 
-        txt_line = txt_line.split(delimiter)
-
-        for i in range(len(txt_line)):
-            txt_line[i] = txt_line[i].strip()
-
-        # print("txt_line after = \n\n", str(txt_line))
+        elist = txt_line.split(delimiter)
+        #map(str.strip, txt_line.split(delimiter))
 
         # first direction of edge
-        elist.extend([(txt_line[i], txt_line[i+1]) for i in range(len(txt_line) - 1)])
+        elist.extend([(txt_line[i], txt_line[i+1], 0) for i in range(len(txt_line) - 1)])
         # second direction of edge
-        elist.extend([(txt_line[i+1], txt_line[i]) for i in range(len(txt_line) - 1)])
+        elist.extend([(txt_line[i+1], txt_line[i], 0) for i in range(len(txt_line) - 1)])
 
 
-    G.add_edges_from(elist)
+    G.add_weighted_edges_from(elist)
 
 
-graph_pickle_file_name = "metro_graph.pkl"
-
-output_file = open(graph_pickle_file_name,'wb')
-pickle.dump(G, output_file)
-output_file.close()
-
-
-
-
-
-#Print the edges to terminal
-# for e in G.edges:
-#     print(e)
+for e in G.edges_iter():
+    print(str(e))
+# plt.subplot(121)
+# nx.draw(G)
+# plt.subplot(122)
+# nx.draw(G, pos=nx.circular_layout(G), nodecolor='r', edge_color='b')
+# plt.show()

@@ -9,7 +9,7 @@ Wellington
 Garfield
 Oak Park
 Kostner
-Conservatory
+Conservatory-Central Park Drive
 Lake
 Francisco
 Pulaski
@@ -42,13 +42,12 @@ Ashland/63rd
 Halsted
 Washington/Wabash
 Polk
-95th/Ran Ryan
+95th/Dan Ryan
 Wilson
 Washington/Wells
 Illinois Medical District
 Morgan
-Quincy/Wells
-Skokie-bound)"
+Quincy
 95th/Dan Ryan
 Chicago
 Division
