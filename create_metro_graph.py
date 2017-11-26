@@ -3,6 +3,9 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
+import pickle
+
+
 class MetroNode():
 
     def __init__(self, name):
@@ -77,34 +80,17 @@ for metro_line in lines_files:
     G.add_edges_from(elist)
 
 
+graph_pickle_file_name = "metro_graph.pkl"
+
+output_file = open(graph_pickle_file_name,'wb')
+pickle.dump(G, output_file)
+output_file.close()
+
+
+
+
 
 #Print the edges to terminal
 # for e in G.edges:
 #     print(e)
 
-# Drawing the graph
-options = {
-        'node_color': 'r',
-        'node_size': 30,
-        'width': 2,
-        'with_labels': True,
-        'nodecolor' :'r',
-        'edge_color' : 'c',
-        'arrows' : False,
-        'font_size' : 10,
-        'font_color' : 'black',
-        'linewidths' : 0.01,
-     }
-
-
-pos = nx.spring_layout(G, k=0.15, iterations=50, scale = 3.0)
-
-# plt.subplot(121)
-# nx.draw(G, with_labels=True, font_weight='bold')
-
-nx.draw(G, pos, **options)
-
-
-# plt.subplot(122)
-# nx.draw(G, pos=nx.circular_layout(G), nodecolor='r', edge_color='b')
-plt.show()
