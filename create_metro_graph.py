@@ -56,7 +56,7 @@ for metro_line in lines_files:
 
     for txt_line in curr_file:
 
-        map(str.strip, txt_line.split(delimiter)) 
+        map(str.strip, txt_line.split(delimiter))
 
         # first direction of edge
         elist.extend([(txt_line[i], txt_line[i+1], 0) for i in range(len(txt_line) - 1)])
@@ -74,7 +74,3 @@ for e in G.edges_iter():
 # plt.subplot(122)
 # nx.draw(G, pos=nx.circular_layout(G), nodecolor='r', edge_color='b')
 # plt.show()
-
-
-
-
