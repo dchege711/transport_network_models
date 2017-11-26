@@ -89,14 +89,15 @@ options = {
         'width': 2,
         'with_labels': True,
         'nodecolor' :'r',
-        'arrows' : True,
+        'edge_color' : 'c',
+        'arrows' : False,
         'font_size' : 10,
         'font_color' : 'black',
-        'linewidths' : 0.5,
+        'linewidths' : 0.01,
      }
 
 
-pos = nx.spring_layout(G, k=0.05, iterations=20, scale = 2.0)
+pos = nx.spring_layout(G, k=0.15, iterations=50, scale = 3.0)
 
 # plt.subplot(121)
 # nx.draw(G, with_labels=True, font_weight='bold')
@@ -107,7 +108,3 @@ nx.draw(G, pos, **options)
 # plt.subplot(122)
 # nx.draw(G, pos=nx.circular_layout(G), nodecolor='r', edge_color='b')
 plt.show()
-
-
-
-
