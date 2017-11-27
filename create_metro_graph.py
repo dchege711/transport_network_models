@@ -44,8 +44,15 @@ G = nx.DiGraph()
 nodes_file_name = "nodes.txt"
 nodes_file = open(nodes_file_name, "r")
 
+name_index = 0
+lat_index = 1
+lng_index = 2
+
 for line in nodes_file:
-    G.add_node(line.strip())
+    station_details = line.strip().split(",")
+    lat = float(station_details[lat_index])
+    lng = float(station_details[lng_index])
+    G.add_node(station_details[name_index], pos=(lat, lng))
 
 # G.add_nodes_from(['Paulina','Clinton','Kedzie'])
 
@@ -85,10 +92,6 @@ graph_pickle_file_name = "metro_graph.pkl"
 output_file = open(graph_pickle_file_name,'wb')
 pickle.dump(G, output_file)
 output_file.close()
-
-
-
-
 
 #Print the edges to terminal
 # for e in G.edges:
