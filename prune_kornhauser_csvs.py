@@ -18,7 +18,7 @@ north_limit = 42.8 # Linden, 42.073153, -87.69073
 south_limit = 41 # 95th/Dan Ryan, 41.722377, -87.624342
 trip_distance_limit = 25 # Maximum length of a trip by the metro
 
-csv_file_names = []
+csv_file_names = ["FinalOriginPixel17031_1.csv"]
 
 def prune_csv_data(csv_files):
     output_file = open('pruned_kornhauser_chicago.csv', 'w')
