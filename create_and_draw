@@ -1,0 +1,8 @@
+
+
+
+
+
+#!/bin/bash
+python3.6 ./create_metro_graph.py
+python3.6 ./draw_metro_graph.py
