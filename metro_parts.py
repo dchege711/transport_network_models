@@ -3,6 +3,7 @@
 # file name of the pickle file that contains the created metro graph
 graph_pickle_file_name = "metro_graph.pkl"
 
+station_kdtree_file_name = "station_kdtree.pkl"
 
 class MetroNode():
 
