@@ -8,7 +8,9 @@ stations = set()
 for line in metro_file:
 
      line = line.split(",")
-     stations.add(line[3])
+     print(line[15])
+     print(line[16])
+     stations.add(line[3] + "," + line[16][1:] + ",")
 
 
 print(stations)

@@ -3,11 +3,11 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from metro_parts import *
 import pickle
 
 
 # Read in the metro graph G from the pickle file
-graph_pickle_file_name = "metro_graph.pkl"
 input_file = open(graph_pickle_file_name,'rb')
 G = pickle.load(input_file)
 input_file.close()
