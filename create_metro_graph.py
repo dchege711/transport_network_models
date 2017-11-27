@@ -11,7 +11,7 @@ import pickle
 G = nx.DiGraph()
 
 # Create a digraph with the nodes from the node file
-nodes_file_name = "nodes.txt"
+nodes_file_name = "nodes_with_latlng.txt"
 nodes_file = open(nodes_file_name, "r")
 
 name_index = 0
@@ -22,7 +22,7 @@ for line in nodes_file:
     station_details = line.strip().split(",")
     lat = float(station_details[lat_index])
     lng = float(station_details[lng_index])
-    G.add_node(station_details[name_index], pos=(lat, lng))
+    G.add_node(station_details[name_index], pos=(lng, lat))
 
 # G.add_nodes_from(['Paulina','Clinton','Kedzie'])
 

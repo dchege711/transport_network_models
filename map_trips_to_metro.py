@@ -12,10 +12,17 @@
 
 import networkx as nx
 import matplotlib.pyplot as plt
-from metro_parts import *
-
 import pickle
 
+from metro_parts import *
 
+
+# We need a way of taking in a latitutde and longitude and finding the
+# station closest to that latitutde and longitude
+
+
+
+pruned_file_name = "pruned_kornhauser_data.csv"
+pruned_file = open(pruned_file_name, "r")
 
 

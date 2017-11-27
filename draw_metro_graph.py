@@ -24,15 +24,17 @@ options = {
         'font_size' : 10,
         'font_color' : 'black',
         'linewidths' : 0.01,
+        'edgelist' : [],
      }
 
-
-pos = nx.spring_layout(G, k=0.15, iterations=50, scale = 3.0)
+# 
+# pos = nx.spring_layout(G, k=0.15, iterations=50, scale = 3.0)
 
 # plt.subplot(121)
 # nx.draw(G, with_labels=True, font_weight='bold')
 
-nx.draw(G, pos, **options)
+nx.draw(G, nx.get_node_attributes(G, 'pos'), **options)
+# nx.draw(G, pos, **options)
 
 
 # plt.subplot(122)
