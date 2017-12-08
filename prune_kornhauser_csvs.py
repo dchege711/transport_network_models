@@ -48,3 +48,16 @@ def prune_csv_data(csv_files):
                 output_file.write(next_line)
 
         counter += 1
+
+def split_pruned_data():
+    input_file = open('pruned_kornhauser_chicago.csv', 'r')
+    output_file = open('summary_kornhauser_chicago.csv', 'w')
+    counter = 0
+    for line in input_file:
+        output_file.write(line)
+        counter += 1
+        if counter > 100:
+            break
+    print("There are", str(counter), "lines in the data.")
+
+split_pruned_data()

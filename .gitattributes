@@ -1,0 +1,2 @@
+*.csv filter=lfs diff=lfs merge=lfs -text
+pruned_kornhauser_chicago.csv filter=lfs diff=lfs merge=lfs -text
