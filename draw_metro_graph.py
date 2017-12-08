@@ -24,7 +24,7 @@ options = {
         'font_size' : 10,
         'font_color' : 'black',
         'linewidths' : 0.01,
-        'edgelist' : [],
+        
      }
 
 # 
