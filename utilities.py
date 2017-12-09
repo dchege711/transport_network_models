@@ -98,6 +98,5 @@ def unit_tests():
     test_get_path()
     test_new_path()
 
-
 if __name__ == "__main__":
     unit_tests()
