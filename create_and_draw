@@ -1,8 +1,6 @@
-
-
-
-
-
 #!/bin/bash
+
+# Provides a quick way of creating and plotting the metro draw_metro_graph
+
 python3.6 ./create_metro_graph.py
 python3.6 ./draw_metro_graph.py
