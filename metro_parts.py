@@ -1,3 +1,13 @@
+"""
+Question: Why do we have MetroNode and Station as different classes?
+
+Encapsulates classes for objects that the find relevant. Currently has:
+
+MetroNode   : The nodes in our transport graph
+MetroEdge   : The edges in our transport network
+Station     : Details about a specific station (node) in the network
+
+"""
 import utilities as ut
 
 # file name of the pickle file that contains the created metro graph
