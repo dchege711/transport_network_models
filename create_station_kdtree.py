@@ -22,6 +22,6 @@ for line in stations_file:
 tree = tree.rebalance()
 print("Created a", tree.dimensions, "- d tree")
 
-output_file = open(metro_parts.station_kdtree_file_name, 'wb')
-pickle.dump(tree, output_file)
-output_file.close()
+# output_file = open(metro_parts.station_kdtree_file_name, 'wb')
+# pickle.dump(tree, output_file)
+# output_file.close()
