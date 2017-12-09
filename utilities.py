@@ -19,6 +19,9 @@ file_locations = {
     "red.txt"       : "chicago_nodes_and_links",
     "yellow.txt"    : "chicago_nodes_and_links",
 
+    # Pickle files containing python data objects
+    "metro_graph.pkl" : "pickle_files",
+    "station_kdtree.pkl" : "pickle_files"
 }
 
 # This gets the directory of where utilities.py is located
