@@ -31,43 +31,27 @@ class CTAKdTree():
 
         # Read each station into the kdtree
         for line in stations_file:
-
             line = line.split(",")
             name = line[0]
             coords = (float(line[1]), float(line[2]))
             self.tree.add(Station(name, coords))
-            #print(tree.is_balanced)
 
         self.tree = self.tree.rebalance()
-        # print("Tree is balanced = " + str(self.tree.is_balanced))
 
 
     # returns tuple of (station name, coords, dist) for the nearest station
     def nearest(self, lat, lon):
-
         tup = self.tree.search_nn((lat, lon))
         name = tup[0].data.name
         dist = tup[1]
-
         return (name, dist)
-
 
 def main():
     t = CTAKdTree()
-
     test = (1,2)
     res = t.nearest(test[0], test[1])
     print("Nearest node to " + str(test) + " is:")
     print(res)
-    # Find the nearest node to the location (1, 2, 3)
-    # print(tree.search_nn( test_node )[0].data.name)
-
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-

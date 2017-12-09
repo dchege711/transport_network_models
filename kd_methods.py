@@ -2,10 +2,6 @@
 import pickle
 import metro_parts
 
-
-
-
-
 class KdTree():
 
     def __init__(self):
