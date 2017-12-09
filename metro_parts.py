@@ -53,7 +53,7 @@ class Station():
           return self.coords[key]
 
      def __len__(self):
-          return len(coords)
+          return len(self.coords)
 
      def __str__(self):
           return self.name + " : " + str(self.coords)

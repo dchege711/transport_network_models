@@ -251,7 +251,6 @@ class KDNode(Node):
                 else:
                     current = current.right
 
-
     @require_axis
     def create_subnode(self, data):
         """ Creates a subnode for the current node """
