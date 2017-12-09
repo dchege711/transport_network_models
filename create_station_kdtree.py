@@ -4,9 +4,9 @@ import kdtree
 import csv
 import pickle
 import metro_parts
+import utilities as ut
 
-
-station_kd_tree_file = "station_kdtree.pkl"
+station_kd_tree_file = ut.get_path("station_kdtree.pkl")
 
 class Station():
      def __init__(self, name, coords):
@@ -56,8 +56,3 @@ output_file.close()
 # print(list(tree.inorder()))
 # Retrieving the Tree in level order
 # print(list(kdtree.level_order(tree)))
-
-
-
-
-

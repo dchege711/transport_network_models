@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from metro_parts import *
 import pickle
 
-import utilties as ut
+import utilities as ut
 
 # the digraph of the metro system
 G = nx.DiGraph()
