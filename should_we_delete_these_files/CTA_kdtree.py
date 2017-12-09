@@ -1,3 +1,9 @@
+"""
+Should we delete this?
+
+It seems like it duplicates create_station_kdtree.py
+
+"""
 
 import metro_parts
 import kdtree
