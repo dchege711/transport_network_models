@@ -1,4 +1,6 @@
 """
+draw_metro_graph.py
+
 Plots a visualization of the transport graph. Uses the lat-lng data
 to place the nodes appropriately.
 
