@@ -1,21 +1,16 @@
 """
-Creates a directed graph with train stations as nodes (and with lat-lng attributes).
-Adds unweighted edges between stations that have a direct connection to each other.
+Creates a directed graph with train stations as nodes, with lat-lng attributes.
+Adds unweighted edges between stations that have a direct connection.
 Stores the resulting graph in binary format for subsequent processing.
 
 """
-
 import networkx as nx
-import matplotlib.pyplot as plt
 from metro_parts import *
 import pickle
-
 import utilities as ut
 
-# the digraph of the metro system
-G = nx.DiGraph()
-
 # Create a digraph with the nodes from the file containing stations and lat-lng
+G = nx.DiGraph()
 for line in open(ut.get_path("nodes_with_latlng.txt"), "r"):
     # Each line follows the pattern "station_name    latitude    longitude"
     station_details = line.strip().split(",")
@@ -23,15 +18,13 @@ for line in open(ut.get_path("nodes_with_latlng.txt"), "r"):
     lng = float(station_details[2])
     G.add_node(station_details[0], pos=(lng, lat))
 
-
 # These files were manually compiled. They have station names on a given line
 lines_files = [
     'blue.txt', 'brown.txt', 'green.txt', 'orange.txt',
     'pink.txt', 'purple.txt', 'yellow.txt', 'red.txt'
 ]
 
-# For each pair of adjacent stations, create two links to denote the bidirectional
-# nature of railway stations
+# For each pair of adjacent stations, create two links for bidirectionality
 for metro_line in lines_files:
     curr_file = open(ut.get_path(metro_line), "r")
     elist = []
