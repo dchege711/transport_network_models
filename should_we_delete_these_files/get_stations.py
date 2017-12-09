@@ -1,3 +1,8 @@
+"""
+This file doesn't seem to serve any purpose.
+
+"""
+
 import csv
 
 metro_file = open('CTA_L_Stops.csv', "r")
@@ -19,6 +24,3 @@ print()
 
 for l in stations:
      print(l)
-
-
-
