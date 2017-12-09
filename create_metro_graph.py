@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 from metro_parts import *
 import pickle
 
+import utilties as ut
 
 # the digraph of the metro system
 G = nx.DiGraph()
 
 # Create a digraph with the nodes from the file containing stations and lat-lng
-for line in open("nodes_with_latlng.txt", "r"):
+for line in open(ut.get_path("nodes_with_latlng.txt"), "r"):
     # Each line follows the pattern "station_name    latitude    longitude"
     station_details = line.strip().split(",")
     lat = float(station_details[1])
@@ -25,14 +26,14 @@ for line in open("nodes_with_latlng.txt", "r"):
 
 # These files were manually compiled. They have station names on a given line
 lines_files = [
-    'blue.txt', 'brown.txt', 'green.txt', 'orange.txt', 
+    'blue.txt', 'brown.txt', 'green.txt', 'orange.txt',
     'pink.txt', 'purple.txt', 'yellow.txt', 'red.txt'
 ]
 
-# For each pair of adjacent stations, create two links to denote the bidirectional 
+# For each pair of adjacent stations, create two links to denote the bidirectional
 # nature of railway stations
 for metro_line in lines_files:
-    curr_file = open(metro_line, "r")
+    curr_file = open(ut.get_path(metro_line), "r")
     elist = []
     for txt_line in curr_file:
         txt_line = txt_line.split(",")
