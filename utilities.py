@@ -10,6 +10,7 @@ import shutil
 file_locations = {
     # Files for building the graph
     "nodes_with_latlng.txt" : "chicago_nodes_and_links",
+    "nodes_with_latlng_updated.txt" : "chicago_nodes_and_links",
 
     # Files containing edges for the graph
     "blue.txt"      : "chicago_nodes_and_links",

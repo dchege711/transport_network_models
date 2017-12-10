@@ -10,15 +10,21 @@ import networkx as nx
 from metro_parts import *
 import pickle
 import utilities as ut
+import sys
 
 # Create a digraph with the nodes from the file containing stations and lat-lng
 G = nx.DiGraph()
-for line in open(ut.get_path("nodes_with_latlng.txt"), "r"):
+for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
     # Each line follows the pattern "station_name    latitude    longitude"
-    station_details = line.strip().split(",")
-    lat = float(station_details[1])
-    lng = float(station_details[2])
+    station_details = line.strip().split("\t")
+    lat_lng = station_details[1].split(",")
+    lat = float(lat_lng[0])
+    lng = float(lat_lng[1])
     G.add_node(station_details[0], pos=(lng, lat))
+    print(station_details[0], " -- ", lat, "--", lng)
+
+sys.exit()
+
 
 # These files were manually compiled. They have station names on a given line
 lines_files = [
