@@ -10,7 +10,6 @@ Clients of the transport network can then call nearest() on the graph itself,
 without caring whether we have a k-d tree under the hood or not.
 
 """
-import pickle
 import metro_parts
 import kdtree
 import utilities as ut
