@@ -29,22 +29,22 @@ for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
 # These files were manually compiled. They have station names on a given line
 lines_files = [
     'blue.txt', 'brown.txt', 'green.txt', 'orange.txt',
-  'yellow.txt'
+  'yellow.txt','pink.txt', 'purple.txt','red.txt'
 ]
-#   'pink.txt', 'purple.txt','red.txt'
+#   
 
 # For each pair of adjacent stations, create two links for bidirectionality
 for metro_line in lines_files:
     curr_file = open(ut.get_path(metro_line), "r")
     elist = []
+    stations = []
     for txt_line in curr_file:
-        txt_line = txt_line.split(",")
-        for i in range(len(txt_line)):
-            txt_line[i] = txt_line[i].strip()
-        # first direction of edge
-        elist.extend([(txt_line[i], txt_line[i+1]) for i in range(len(txt_line) - 1)])
-        # second direction of edge
-        elist.extend([(txt_line[i+1], txt_line[i]) for i in range(len(txt_line) - 1)])
+        stations.append(txt_line.strip())
+    # first direction of edge
+    elist.extend([(stations[i], stations[i+1]) for i in range(len(stations) - 1)])
+    # second direction of edge
+    elist.extend([(stations[i+1], stations[i]) for i in range(len(stations) - 1)])
+
     G.add_edges_from(elist)
 
 # Store the graph as a pickle file for later references
