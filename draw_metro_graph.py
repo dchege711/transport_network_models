@@ -26,7 +26,7 @@ options = {
     'nodecolor' :'r',
     'edge_color' : 'c',
     'arrows' : False,
-    'font_size' : 10,
+    'font_size' : 4,
     'font_color' : 'black',
     'linewidths' : 0.01,
 
