@@ -1,5 +1,7 @@
+"""
+Illustrates how to work with the kd_tree module.
 
-
+"""
 
 import kdtree
 
@@ -68,11 +70,3 @@ kdtree.visualize(tree)
 tree = tree.rebalance()
 print(tree.is_balanced)
 kdtree.visualize(tree)
-
-
-
-
-
-
-
-

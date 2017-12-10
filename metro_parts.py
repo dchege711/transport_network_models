@@ -1,9 +1,18 @@
+"""
+Question: Why do we have MetroNode and Station as different classes?
 
+Encapsulates classes for objects that the find relevant. Currently has:
+
+MetroNode   : The nodes in our transport graph
+MetroEdge   : The edges in our transport network
+Station     : Details about a specific station (node) in the network
+
+"""
+import utilities as ut
 
 # file name of the pickle file that contains the created metro graph
-graph_pickle_file_name = "metro_graph.pkl"
-
-station_kdtree_file_name = "station_kdtree.pkl"
+graph_pickle_file_name = ut.get_path("metro_graph.pkl")
+station_kdtree_file_name = ut.get_path("station_kdtree.pkl")
 
 class MetroNode():
 
@@ -43,3 +52,18 @@ class MetroEdge():
 
     def setWeekly(self, val):
         self.weekly_flow = val
+
+class Station():
+     def __init__(self, name, coords):
+
+          self.name = name
+          self.coords = coords # tuple (lat, long)
+
+     def __getitem__(self, key):
+          return self.coords[key]
+
+     def __len__(self):
+          return len(self.coords)
+
+     def __str__(self):
+          return self.name + " : " + str(self.coords)

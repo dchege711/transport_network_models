@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 """A Python implemntation of a kd-tree
 
 This package provides a simple implementation of a kd-tree in Python.
@@ -251,7 +250,6 @@ class KDNode(Node):
                     return current.right
                 else:
                     current = current.right
-
 
     @require_axis
     def create_subnode(self, data):
