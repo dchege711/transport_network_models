@@ -1,3 +1,12 @@
+"""
+average_day_rates.py
+
+Given the amount of people getting into a station per day (as provided
+by the Chicago Transport Authority) in 2010, we find the average number
+of people getting into a station.
+
+"""
+
 import csv
 import pickle
 import utilities as ut
