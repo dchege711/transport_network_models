@@ -23,14 +23,15 @@ for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
     G.add_node(station_details[0], pos=(lng, lat))
     print(station_details[0], " -- ", lat, "--", lng)
 
-sys.exit()
+# sys.exit()
 
 
 # These files were manually compiled. They have station names on a given line
 lines_files = [
     'blue.txt', 'brown.txt', 'green.txt', 'orange.txt',
-    'pink.txt', 'purple.txt', 'yellow.txt', 'red.txt'
+  'yellow.txt'
 ]
+#   'pink.txt', 'purple.txt','red.txt'
 
 # For each pair of adjacent stations, create two links for bidirectionality
 for metro_line in lines_files:
