@@ -60,4 +60,26 @@ def split_pruned_data():
             break
     print("There are", str(counter), "lines in the data.")
 
-split_pruned_data()
+def sample_subset_pruned_data():
+
+    output_file_name = 'sample_subset_pruned_kornhauser.csv'
+
+    input_file = open('pruned_kornhauser_chicago.csv', 'r')
+    output_file = open(output_file_name, 'w')
+
+    skip_every = 10000
+
+    counter = 0
+    subset_counter = 0
+    for line in input_file:
+
+        if counter % skip_every == 0:
+            output_file.write(line)
+            subset_counter += 1
+
+        counter += 1
+
+    print("There are", str(counter), "lines in the data,", str(subset_counter), "of which were written to the file:\n", output_file_name)
+
+
+sample_subset_pruned_data() # split_pruned_data()
