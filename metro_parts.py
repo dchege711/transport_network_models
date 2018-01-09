@@ -44,18 +44,22 @@ class MetroEdge():
         self.weekly_flow = val
 
 class Station():
-     def __init__(self, name, coords):
-          self.name = name
-          self.coords = coords # tuple (lat, long)
+    def __init__(self, name, coords):
+        self.name = name
+        self.coords = coords # tuple (lat, long)
 
-     def __getitem__(self, key):
-          return self.coords[key]
+    def __getitem__(self, key):
+        return self.coords[key]
 
-     def __len__(self):
-          return len(self.coords)
+    def __len__(self):
+        return len(self.coords)
 
-     def __str__(self):
-          return self.name + " : " + str(self.coords)
+    def __str__(self):
+        return self.name + " : " + str(self.coords)
       
-     def __repr__(self):
-          return self.name + " : " + str(self.coords)
+    def __repr__(self):
+        return " ".join([
+            "{0:15}:".format("Station Name"), self.name, 
+            "\n{0:15}:".format("Latitude"), str(self.coords[0]),
+            "\n{0:15}:".format("Longitude"), str(self.coords[1])
+        ])
