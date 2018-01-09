@@ -59,7 +59,6 @@ class Station():
       
     def __repr__(self):
         return " ".join([
-            "{0:15}:".format("Station Name"), self.name, 
-            "\n{0:15}:".format("Latitude"), str(self.coords[0]),
-            "\n{0:15}:".format("Longitude"), str(self.coords[1])
+            "Name:", self.name, "lat: ", str(self.coords[0]),
+            "lng: ", str(self.coords[1])
         ])
