@@ -7,7 +7,6 @@ Stores the resulting graph in binary format for subsequent processing.
 
 """
 import networkx as nx
-# from networkx import Digraph
 from metro_parts import Station, MetroEdge
 import pickle
 import utilities as ut
@@ -44,6 +43,13 @@ class metro_graph(nx.classes.digraph.DiGraph):
 
             self.G.add_edges_from(elist)
             
+        self.store_as_pickle()
+    
+    def store_as_pickle(self):
+        output_file = open("metro_graph.pkl",'wb')
+        pickle.dump(self.G, output_file)
+        output_file.close()
+    
     def nodes(self):
         return nx.nodes(self.G)
     
@@ -122,7 +128,9 @@ def main():
     
 
 if __name__ == "__main__":
-    main()    
+    main()
+    
+     
 # # Create a digraph with the nodes from the file containing stations and lat-lng
 # G = nx.DiGraph()
 # for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
