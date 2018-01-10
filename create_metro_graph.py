@@ -14,7 +14,7 @@ import sys
 from pprint import pprint
 import random
 
-class metro_graph(nx.classes.digraph.DiGraph):
+class metro_graph():
     
     def __init__(self):
         self.G = nx.DiGraph()
@@ -154,11 +154,20 @@ class metro_graph(nx.classes.digraph.DiGraph):
         inward_edges = self.edges(nodes=node, incoming=True)
         return self._sum_weights_to_power_alpha(alpha, inward_edges, edge_attribute)
     
+    def __getattr__(self, unsupported_method):
+        def fall_back_method(*args, **kwargs):
+            try:
+                nx_method = getattr(nx, unsupported_method)
+                return nx_method(self.G, args, kwargs)
+            except:
+                raise NotImplementedError(" ".join([unsupported_method, "is not implemented"]))
+        return fall_back_method 
+    
 def main():
     test_graph = metro_graph()
     test_station = "Addison (Brown Line)"
     test_station_2 = "Paulina (Brown Line)"
-    print_padding = "{0:60}"
+    print_padding = "{0:65}"
     
     print(print_padding.format("Testing add_node(), has_node() and number_of_nodes()"), end="... ")
     new_node_1 = "North Pole"
@@ -212,6 +221,14 @@ def main():
     print(test_graph.graph_activity(alpha=0.5))
     print(print_padding.format("Testing graph_popularity() and node_popularity()"), end="... ")
     print(test_graph.graph_popularity(alpha=0.5))
+    
+    print(print_padding.format("Testing a networkx method that's not implemented by metro_graph"), end="... ")
+    try:
+        test_graph.all_shortest_paths(test_station, test_station_2, weight="flow")
+        print("passed!")
+    except:
+        print("failed!")
+        
 
 if __name__ == "__main__":
     main()
