@@ -7,12 +7,16 @@ This script tries to answer one of our research questions:
 from copy import deepcopy
 from create_metro_graph import metro_graph
 from pprint import pprint
-# import networkx as nx
+import networkx as nx
+import operator
 
 def delete_by_betweeness_centrality(graph):
-    # betweeness_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
-    betweeness_centralities = graph.edge_betweenness_centrality(weight="flow", k=2)
-    pprint(betweeness_centralities)
+    graph = deepcopy(graph)
+    edge_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
+    edge_centralities = sorted(edge_centralities.items(), key=operator.itemgetter(1))
+    
+    for edge in edge_centralities:
+        graph
 
 def main():
     

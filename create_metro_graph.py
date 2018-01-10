@@ -57,6 +57,33 @@ class metro_graph():
     def nodes(self):
         return self.G.nodes()
     
+    def remove_node(self, node):
+        self.G.remove_node(node)
+        
+    def has_node(self, node):
+        return self.G.has_node(node)
+    
+    def number_of_nodes(self):
+        return nx.number_of_nodes(self.G)
+    
+    def get_node_attribute(self, node, attribute_name="station"):
+        return nx.get_node_attributes(self.G, attribute_name)[node]
+    
+    def add_attribute_to_node(self, node, **kwargs):
+        for key in kwargs:
+            attribute = {
+                node : kwargs[key]
+            }
+            nx.set_node_attributes(self.G, key, attribute)
+            
+    def neighbors(self, node, predecessors=False, successors=False):
+        if predecessors and not successors:
+            return self.G.predecessors(node)
+        elif successors and not predecessors:
+            return self.G.successors(node)
+        else:
+            return list(nx.all_neighbors(self.G, node))
+    
     def edges(self, nodes=None, incoming=False, outgoing=False):
         if incoming and not outgoing:
             return self.G.in_edges(nbunch=nodes)
@@ -73,32 +100,21 @@ class metro_graph():
             raise ValueError("Node {0} does not exist in the graph".format(relevant_edge[1]))
         self.G.add_edge(relevant_edge[0], relevant_edge[1], kwargs)
     
-    def number_of_nodes(self):
-        return nx.number_of_nodes(self.G)
+    def remove_edge(self, edge=None, source_node=None, target_node=None):
+        relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
+        self.G.remove_edge(relevant_edge[0], relevant_edge[1])
     
     def number_of_edges(self):
         return nx.number_of_edges(self.G)
     
-    def neighbors(self, node, predecessors=False, successors=False):
-        if predecessors and not successors:
-            return self.G.predecessors(node)
-        elif successors and not predecessors:
-            return self.G.successors(node)
-        else:
-            return list(nx.all_neighbors(self.G, node))
+    def has_edge(self, edge=None, source_node=None, target_node=None):
+        relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
+        return self.G.has_edge(relevant_edge[0], relevant_edge[1])
     
-    def add_attribute_to_node(self, node, **kwargs):
-        for key in kwargs:
-            attribute = {
-                node : kwargs[key]
-            }
-            nx.set_node_attributes(self.G, key, attribute)
-        
-    def get_node_attribute(self, node, attribute_name="station"):
-        return nx.get_node_attributes(self.G, attribute_name)[node]
-        
-    def has_node(self, node):
-        return self.G.has_node(node)
+    def randomize_all_edge_weights(self, max_n, edge_attribute="flow"):
+        if edge_attribute == "flow":
+            for edge in self.edges():
+                self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
         
     def add_attribute_to_edge(self, edge=None, source_node=None, target_node=None, **kwargs):
         relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
@@ -120,10 +136,6 @@ class metro_graph():
         else:
             raise ValueError("Please provide either an edge, or a source_node/target_node combo")
     
-    def has_edge(self, edge=None, source_node=None, target_node=None):
-        relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
-        return self.G.has_edge(relevant_edge[0], relevant_edge[1])
-        
     def graph_activity(self, alpha=1, edge_attribute="flow"):
         running_sum = 0
         for node in self.nodes():
@@ -153,11 +165,6 @@ class metro_graph():
     def node_popularity(self, node, alpha=1, edge_attribute="flow"):
         inward_edges = self.edges(nodes=node, incoming=True)
         return self._sum_weights_to_power_alpha(alpha, inward_edges, edge_attribute)
-    
-    def randomize_all_edge_weights(self, max_n, edge_attribute="flow"):
-        if edge_attribute == "flow":
-            for edge in self.edges():
-                self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
     
 def main():
     test_graph = metro_graph()
