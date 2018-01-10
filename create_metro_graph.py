@@ -161,7 +161,11 @@ class metro_graph():
                 return nx_method(self.G, args, kwargs)
             except:
                 raise NotImplementedError(" ".join([unsupported_method, "is not implemented"]))
-        return fall_back_method 
+        return fall_back_method
+    
+    def randomize_all_edge_weights(self, max_n):
+        for edge in self.edges():
+            self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
     
 def main():
     test_graph = metro_graph()
@@ -215,8 +219,7 @@ def main():
     except KeyError:
         print("passed!")
 
-    for edge in test_graph.edges():
-        test_graph.add_attribute_to_edge(edge=edge, flow=random.randint(1, 1000))    
+    test_graph.randomize_all_edge_weights(1000)
     print(print_padding.format("Testing graph_activity() and node_activity()"), end="... ")    
     print(test_graph.graph_activity(alpha=0.5))
     print(print_padding.format("Testing graph_popularity() and node_popularity()"), end="... ")
