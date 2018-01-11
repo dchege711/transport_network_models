@@ -152,8 +152,7 @@ class metro_graph():
         for edge in edges:
             running_sum += self.get_edge_attribute(edge=edge, attribute_name=edge_attribute)
         try:
-            # return num_edges * ((running_sum / num_edges) ** alpha)
-            return running_sum * ((num_edges / running_sum) ** alpha)
+            return num_edges * ((running_sum / num_edges) ** alpha)
         except ZeroDivisionError:
             return 0
         
@@ -166,6 +165,16 @@ class metro_graph():
     def node_popularity(self, node, alpha=1, edge_attribute="flow"):
         inward_edges = self.edges(nodes=node, incoming=True)
         return self._sum_weights_to_power_alpha(alpha, inward_edges, edge_attribute)
+    
+    def how_many_riders_from_a_to_b(self, a=None, b=None):
+        # TODO Implement this more realistically
+        assert (self.has_node(a))
+        assert (self.has_node(b))
+        try:
+            shortest_path = nx.shortest_path(self.G, source=a, target=b, weight="flow")
+        except nx.NetworkXNoPath:
+            shortest_path = 0
+        return shortest_path
     
 def main():
     test_graph = metro_graph()
