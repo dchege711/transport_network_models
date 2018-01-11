@@ -7,9 +7,11 @@ testing = False
 
 replacement_char = "%"
 def decomma(s):
+    replacement_char = "%"
     return s.replace(",", replacement_char)
 
 def recomma(s):
+    replacement_char = "%"
     return s.replace(replacement_char, ",")
 
 def add_origin_stations_to_pruned_data():
