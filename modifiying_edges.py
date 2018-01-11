@@ -52,7 +52,7 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot
     if type_of_plot == "line":
         plt.plot(x, y)
     elif type_of_plot == "scatter":
-        plt.scatter(x, y)
+        plt.scatter(x, y, s=1.5)
     else:
         raise ValueError("Please provide a valid type of plot")
     plt.show()
