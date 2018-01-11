@@ -9,7 +9,6 @@ from create_metro_graph import metro_graph
 from matplotlib import pyplot as plt
 from pprint import pprint
 import networkx as nx
-import operator
 
 def delete_by_betweeness_centrality(graph):
     """
@@ -20,34 +19,42 @@ def delete_by_betweeness_centrality(graph):
     """
     graph = deepcopy(graph)
     edge_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
-    edge_centralities = sorted(edge_centralities.items(), key=operator.itemgetter(1))
     importance_measures = []
-    scores = []
+    centralities = []
     i = 1
-    for edge, centrality in edge_centralities:
+    unmodified_graph_score = graph_measure(graph)
+    for edge in edge_centralities:
         flow = graph.get_edge_attribute(edge=edge, attribute_name="flow")
         graph.remove_edge(edge=edge)
-        activity = graph.graph_popularity()
-        # print(score, activity)
-        importance_measures.append(activity)
-        scores.append(score)
+        importance_measures.append(graph_measure(graph) - unmodified_graph_score)
+        centralities.append(edge_centralities[edge])
         graph.add_edge(edge=edge, flow=flow)
-        if (i % 10 == 0): print("Iteration:", i, "centrality:", score)
+        if (i % 20 == 0): print("Iteration:", i, "centrality:", edge_centralities[edge])
+        i += 1
     
-    line_plot(
-        x=scores, y=importance_measures, 
-        ylabel="Graph Activity", xlabel="Betweenness centrality of removed edge",
+    make_plot(
+        x=centralities, y=importance_measures, type_of_plot="scatter",
+        ylabel=r"$\Delta$ in Graph Activity", xlabel="Betweenness centrality of removed edge",
         title="Removing edges by decreasing betweenness centrality"
     )
+    
+def graph_measure(graph):
+    # alpha > 1 gives a higher score to the node with smallest number of outgoing links
+    return graph.graph_activity(alpha=0.2)
 
 
-def line_plot(x=None, y=None, xlabel=None, ylabel=None, title=None):
+def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot=None):
     plt.figure(1)
     plt.grid(True)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
-    plt.plot(x, y, color='b')
+    if type_of_plot == "line":
+        plt.plot(x, y)
+    elif type_of_plot == "scatter":
+        plt.scatter(x, y)
+    else:
+        raise ValueError("Please provide a valid type of plot")
     plt.show()
     
 def main():

@@ -152,7 +152,8 @@ class metro_graph():
         for edge in edges:
             running_sum += self.get_edge_attribute(edge=edge, attribute_name=edge_attribute)
         try:
-            return num_edges * ((running_sum / num_edges) ** alpha)
+            # return num_edges * ((running_sum / num_edges) ** alpha)
+            return running_sum * ((num_edges / running_sum) ** alpha)
         except ZeroDivisionError:
             return 0
         
