@@ -72,7 +72,8 @@ def delete_one_edge_and_evaluate(graph):
         
     
 def graph_measure(graph, alpha=0.5):
-    return graph.graph_popularity(alpha=alpha) + graph.graph_activity(alpha=alpha)
+    # return graph.graph_popularity(alpha=alpha) + graph.graph_activity(alpha=alpha)
+    return graph.metro_network_performance()
 
 def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot=None, file_name=None):
     plt.grid(True)
