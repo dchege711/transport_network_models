@@ -281,11 +281,17 @@ def main():
     except KeyError:
         print("passed!")
 
-    test_graph.randomize_all_flows(1000)
+    # test_graph.randomize_all_flows(1000)
     print(print_padding.format("Testing graph_activity() and node_activity()"), end="... ")    
     print(test_graph.graph_activity(alpha=0.5))
     print(print_padding.format("Testing graph_popularity() and node_popularity()"), end="... ")
     print(test_graph.graph_popularity(alpha=0.5))
+    
+    # Print the edge flows 
+    for edge in test_graph.edges():
+        print(edge, ":", test_graph.get_edge_attribute(edge=edge, attribute_name="flow"))
+    
+    
 
 if __name__ == "__main__":
     main()
