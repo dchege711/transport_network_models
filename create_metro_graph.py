@@ -54,6 +54,10 @@ class metro_graph():
             
         # self.store_as_pickle()
         self._set_distances_as_edge_attributes()
+        # Attach capacities to the edges (i.e. max number of people that can be transported)
+        for edge in self.edges():
+            self.add_attribute_to_edge(self, edge=edge, capacity=10000)
+        self.fill_flows_from_mapped_data()
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
@@ -132,7 +136,7 @@ class metro_graph():
             for edge in self.edges():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
                 
-    def _fill_flows_from_mapped_data(self):
+    def fill_flows_from_mapped_data(self):
         all_shortest_paths = nx.shortest_paths(self.G, weight="distance")
         for journey in self.journeys:
             shortest_path = all_shortest_paths[journey[0]][journey[1]]
@@ -201,18 +205,26 @@ class metro_graph():
     
     def metro_network_performance(self, cost_per_unit_distance=10):
         """
-        We assume that the less distance that people travel to their destination,
-        the better the transport network's performance. But we need to subtract 
-        the cost incurred by the transport network. We use cost per unit distance 
-        since a train moving 10 people from A to B roughly costs the same as it 
-        moving 1,000 people from A to B - assuming it has enough capacity.
-         
+        Rationale:
+        1. Reward people getting to destinations through shorter routes 
+        2. Penalize the existence of longer routes in the graph 
+        3. Penalize empty cabins or congested cabins
+        4. Add extra penalty for passengers that can't take the train whatsoever
+        
         """
         running_sum = 0
         for edge in self.edges():
             distance = self.get_edge_attribute(edge=edge, attribute_name="distance")
             flow = self.get_edge_attribute(edge=edge, attribute_name="flow")
-            running_sum += flow * distance - distance * cost_per_unit_distance
+            capacity = self.get_edge_attribute(edge=edge, attribute_name="capacity")
+            if flow <= capacity:
+                inefficiency = capacity - flow 
+            else:
+                inefficiency = flow - capacity
+                if inefficiency > capacity * 0.4:
+                    inefficiency = inefficiency * 2
+            
+            running_sum += flow * distance - distance * cost_per_unit_distance - inefficiency
         return running_sum
             
     
