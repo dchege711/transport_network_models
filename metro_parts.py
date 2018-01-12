@@ -88,7 +88,9 @@ class Station():
 def station_main():
     station_a = Station("A", [41.953508, -87.746416])
     station_b = Station("B", [41.947983, -87.744942])
-    assert("{0:.4f}".format(station_a.distance_to(station_b)) == "0.6256")
+    assert ("{0:.4f}".format(station_a.distance_to(station_b)) == "0.6256")
+    assert (station_a.distance_to(station_b) == station_b.distance_to(station_a))
+    
     
 if __name__ == "__main__":
     station_main()
