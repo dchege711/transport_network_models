@@ -48,10 +48,10 @@ class Station():
     def __init__(self, name, coords):
         self.name = name
         self.coords = coords # tuple (lat, long)
-        self.lat = coords[0]
-        self.lng = coords[1]
-        self.lat_in_radians = coords[0] * pi / 180
-        self.lng_in_radians = coords[1] * pi / 180
+        self.lat = float(coords[0])
+        self.lng = float(coords[1])
+        self.lat_in_radians = self.lat * pi / 180
+        self.lng_in_radians = self.lng * pi / 180
 
     def __getitem__(self, key):
         return self.coords[key]

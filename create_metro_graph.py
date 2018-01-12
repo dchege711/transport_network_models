@@ -45,6 +45,7 @@ class metro_graph():
             self.G.add_edges_from(elist)
             
         # self.store_as_pickle()
+        self._set_distances_as_edge_attributes()
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
@@ -90,7 +91,14 @@ class metro_graph():
         elif outgoing and not incoming:
             return self.G.out_edges(nbunch=nodes)
         else:
-            return self.G.edges(nbunch=nodes)    
+            return self.G.edges(nbunch=nodes) 
+        
+    def _set_distances_as_edge_attributes(self):
+        # Possible improvement: a.dist(b) == b.dist(a), so no need to recompute 
+        for edge in self.edges():
+            station_a = self.get_node_attribute(edge[0], attribute_name="station")
+            station_b = self.get_node_attribute(edge[1], attribute_name="station")
+            self.add_attribute_to_edge(edge=edge, distance=station_a.distance_to(station_b))   
     
     def add_edge(self, edge=None, source_node=None, target_node=None, **kwargs):
         relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
