@@ -93,7 +93,7 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot
 def main():
     
     graph = metro_graph()
-    graph.randomize_all_edge_weights(1000)
+    graph.randomize_all_flows(1000)
     
     delete_one_edge_and_evaluate(graph)
 

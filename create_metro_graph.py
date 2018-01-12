@@ -16,8 +16,11 @@ import random
 
 class metro_graph():
     
-    def __init__(self):
+    def __init__(self, journeys=None):
         self.G = nx.DiGraph()
+        # Expecting a dict with keys as a (origin_station, destination_station)
+        # and the value being how many people are taking that trip.
+        self.journeys = journeys 
         
         # Add the stations as nodes
         for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
@@ -119,10 +122,27 @@ class metro_graph():
         relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
         return self.G.has_edge(relevant_edge[0], relevant_edge[1])
     
-    def randomize_all_edge_weights(self, max_n, edge_attribute="flow"):
+    def randomize_all_flows(self, max_n, edge_attribute="flow"):
         if edge_attribute == "flow":
             for edge in self.edges():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
+                
+    def _fill_flows_from_mapped_data(self):
+        all_shortest_paths = nx.shortest_paths(self.G, weight="distance")
+        for journey in self.journeys:
+            shortest_path = all_shortest_paths[journey[0]][journey[1]]
+            hops = len(shortest_path) - 1
+            for i in range(hops):
+                temp = self.get_edge_attribute(
+                    source_node=shortest_path[i], 
+                    target_node=shortest_path[i+1], 
+                    attribute_name="flow"
+                )
+                self.add_attribute_to_edge(
+                    source_node=shortest_path[i], 
+                    target_node=shortest_path[i+1],
+                    flow=temp + self.journeys[journey]
+                )
         
     def add_attribute_to_edge(self, edge=None, source_node=None, target_node=None, **kwargs):
         relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
@@ -174,15 +194,22 @@ class metro_graph():
         inward_edges = self.edges(nodes=node, incoming=True)
         return self._sum_weights_to_power_alpha(alpha, inward_edges, edge_attribute)
     
-    def how_many_riders_from_a_to_b(self, a=None, b=None):
-        # TODO Implement this more realistically
-        assert (self.has_node(a))
-        assert (self.has_node(b))
-        try:
-            shortest_path = nx.shortest_path(self.G, source=a, target=b, weight="flow")
-        except nx.NetworkXNoPath:
-            shortest_path = 0
-        return shortest_path
+    def metro_network_performance(self, cost_per_unit_distance=10):
+        """
+        We assume that the less distance that people travel to their destination,
+        the better the transport network's performance. But we need to subtract 
+        the cost incurred by the transport network. We use cost per unit distance 
+        since a train moving 10 people from A to B roughly costs the same as it 
+        moving 1,000 people from A to B - assuming it has enough capacity.
+         
+        """
+        running_sum = 0
+        for edge in self.edges():
+            distance = self.get_edge_attribute(edge=edge, attribute_name="distance")
+            flow = self.get_edge_attribute(edge=edge, attribute_name="flow")
+            running_sum += flow * distance - distance * cost_per_unit_distance
+        return running_sum
+            
     
 def main():
     test_graph = metro_graph()
@@ -236,7 +263,7 @@ def main():
     except KeyError:
         print("passed!")
 
-    test_graph.randomize_all_edge_weights(1000)
+    test_graph.randomize_all_flows(1000)
     print(print_padding.format("Testing graph_activity() and node_activity()"), end="... ")    
     print(test_graph.graph_activity(alpha=0.5))
     print(print_padding.format("Testing graph_popularity() and node_popularity()"), end="... ")
