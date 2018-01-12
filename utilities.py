@@ -25,6 +25,7 @@ file_locations = {
     # Pickle files containing python data objects
     "metro_graph.pkl" : "pickle_files",
     "station_kdtree.pkl" : "pickle_files",
+    "average_ridership_dict.pkl" : "pickle_files",
 
     # Files to help simulate flow on the network
     "cta_ridership_daily_totals.csv" : "cta_ridership_data"
@@ -98,6 +99,17 @@ def test_new_path():
 def unit_tests():
     test_get_path()
     test_new_path()
+
+# for dealing with commas in station names and .csv files
+replacement_char = "%"
+def decomma(s):
+    replacement_char = "%"
+    return s.replace(",", replacement_char)
+
+def recomma(s):
+    replacement_char = "%"
+    return s.replace(replacement_char, ",")
+
 
 if __name__ == "__main__":
     unit_tests()

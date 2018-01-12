@@ -1,18 +1,10 @@
 
+import utilities as ut
 import kd_methods
 import random
-
+import average_day_rates
 
 testing = False
-
-replacement_char = "%"
-def decomma(s):
-    replacement_char = "%"
-    return s.replace(",", replacement_char)
-
-def recomma(s):
-    replacement_char = "%"
-    return s.replace(replacement_char, ",")
 
 def add_origin_stations_to_pruned_data():
 
@@ -36,7 +28,7 @@ def add_origin_stations_to_pruned_data():
 
     status_every = 500000
 
-    print("Writing origins to:\n" + output_file_name)
+    print("Writing origins to: " + output_file_name)
     counter = 0
     for line in input_file:
 
@@ -45,12 +37,14 @@ def add_origin_stations_to_pruned_data():
         start_lng = float(items[origin_lng_index])
         origin_station = tree.nearest(start_lat, start_lng)[0]
 
-        output_file.write(line[:-1] + "," + decomma(origin_station) + "\n")
+        output_file.write(line[:-1] + "," + ut.decomma(origin_station) + "\n")
 
         counter += 1
         if counter % status_every == 0:
             print("Processed", str(counter), "lines")
 
+    input_file.close()
+    output_file.close()
     print("\nDone\n")
 
 def sort_by_origin_station():
@@ -75,7 +69,7 @@ def sort_by_origin_station():
     status_every = 500000
 
     print("Sorting trips in", input_file_name, "by origin.")
-    print("Writing sorted results to:\n", output_file_name)
+    print("Writing sorted results to: ", output_file_name)
     counter = 0
     # Read in all trips into a list of trips
     for line in input_file:
@@ -100,6 +94,9 @@ def sort_by_origin_station():
             print("So far wrote", str(counter), " sorted lines to output file.")
         counter += 1
     print("Wrote", str(counter), "lines to output file.")
+
+    input_file.close()
+    output_file.close()
     print("\nDone\n")
 
 
@@ -111,6 +108,10 @@ def sample_from_sorted_origins():
     if testing:
         input_file_name = 'pruned_kornhauser_w_origins_sorted_test.csv'
         output_file_name = 'sampled_kornhauser_trips_test.csv'
+
+    # Initializes object that has getRidership(node) method that
+    # returns the avg ridership at that node
+    Avgs = average_day_rates.AvgRidership()
 
     input_file = open(input_file_name, 'r')
     output_file = open(output_file_name, 'w')
@@ -124,8 +125,8 @@ def sample_from_sorted_origins():
 
     status_every = 500000
 
-    print("Sampling from:\n" + input_file_name)
-    print("Writing sampled results to:\n" + output_file_name)
+    print("Sampling from: " + input_file_name)
+    print("Writing sampled results to: " + output_file_name)
 
     # Go through each trip, adding it to the list of the current origin
     # station, and if a new origin station is reached, randomly sample
@@ -138,27 +139,34 @@ def sample_from_sorted_origins():
     current_station_trips = []
     first_line = input_file.readline()
     items = first_line.split(",")
-    current_origin_station = items[origin_station_index]
+    current_origin_station = items[origin_station_index].strip()
     current_station_trips.append(first_line)
 
     for line in input_file:
 
         items = line.split(",")
 
-        if items[origin_station_index] != current_origin_station:
+        if items[origin_station_index].strip() != current_origin_station:
 
             # Set k to the avg number of people who get on at the current_origin_station
-            k = 1
-            if len(current_station_trips) > 3:
-                k = 4
+            k = int(Avgs.getRidership(current_origin_station))
 
-            sampled_trips = random.sample(current_station_trips, k)
+            sampled_trips = []
+            # print(current_origin_station, ":", k)
+            if k > len(current_station_trips):
+                if not testing: print("ATTENTION: STATION", current_origin_station, "HAD FEWER PRUNED KORNHAUSER DATA OCCURRENCES THAT IT'S AVERAGE RIDERSHIP VALUE")
+                
+                for i in range(k):
+                    sampled_trips.append(random.choice(current_station_trips))
+
+            else:
+                sampled_trips = random.sample(current_station_trips, k)
 
             for f in sampled_trips:
                 output_file.write(f)
             sample_counter += k
 
-            current_origin_station = items[origin_station_index]
+            current_origin_station = items[origin_station_index].strip()
             current_station_trips = []
         
         current_station_trips.append(line)
@@ -168,20 +176,40 @@ def sample_from_sorted_origins():
         counter += 1
 
 
+    print("len of current_station_trips = ", len(current_station_trips))
+    # print("current_station_trips = \n", current_station_trips)
     # Handle edge case of last origin station
-    k = 1 # CHANGE
-    sampled_trips = random.sample(current_station_trips, k)
+
+
+    k = int(Avgs.getRidership(current_origin_station))
+    sampled_trips = []
+    # print(current_origin_station, ":", k)
+    if k > len(current_station_trips):
+        if not testing: print("ATTENTION: STATION", current_origin_station, "HAD FEWER PRUNED KORNHAUSER DATA OCCURRENCES THAT IT'S AVERAGE RIDERSHIP VALUE")
+        
+        for i in range(k):
+            sampled_trips.append(random.choice(current_station_trips))
+    else:
+        sampled_trips = random.sample(current_station_trips, k)
+
     for line in sampled_trips:
         output_file.write(line)
     sample_counter += k
 
     print("Wrote", str(sample_counter), "sampled trips to the output file")
 
+    input_file.close()
+    output_file.close()
+    print("Done")
 
 
 if __name__ == "__main__":
-    #add_origin_stations_to_pruned_data()
-    #sort_by_origin_station()
+
+    # print("\nADDING ORIGIN STATIONS TO PRUNED DATA\n\n")
+    # add_origin_stations_to_pruned_data()
+    # print("\n\nSORTING BY ORIGIN STATION \n\n")
+    # sort_by_origin_station()
+    print("\n\nSAMPLING FROM SORTED ORIGIN STATIONS \n\n")
     sample_from_sorted_origins()
 
 

@@ -6,7 +6,8 @@ by the Chicago Transport Authority) in 2010, we find the average number
 of people getting into a station.
 
 """
-
+import utilities as ut
+import map_kornhauser_to_metro
 import csv
 import pickle
 import csv
@@ -17,16 +18,22 @@ avg_data_pkl_name = "average_ridership_dict.pkl"
 
 class AvgRidership:
 
+    default_val = 'default'
     def __init__(self):
 
         # Read in the dict with avg ridership for each station from the pickle file
-        input_file = open(avg_data_pkl_name, 'rb')
+        pkl_file_path = ut.get_path(avg_data_pkl_name)
+        input_file = open(pkl_file_path, 'rb')
         self.avg_ridership = pickle.load(input_file)
         input_file.close()
 
     def getRidership(self, station_name):
+        try:
+            val = self.avg_ridership[station_name]
+            return val
+        except:
+            return self.avg_ridership[AvgRidership.default_val]
 
-        return self.avg_ridership[station_name]
 
 def write_pkl():
     Node_Dictionary = {}
@@ -36,7 +43,7 @@ def write_pkl():
 
     for line in input_file:
         items = line.split(",")
-        node_name, avg = map_kornhauser_to_metro.recomma(items[0]), float(items[1])
+        node_name, avg = items[0], float(items[1])
         Node_Dictionary[node_name] = avg
 
     print("Printing Node_Dictionary:\n")
@@ -44,7 +51,8 @@ def write_pkl():
     for x in Node_Dictionary:
         print(x + ": " + str(Node_Dictionary[x]))
 
-    output_file = open(avg_data_pkl_name,'wb')
+    pkl_file_path = ut.get_path(avg_data_pkl_name)
+    output_file = open(pkl_file_path,'wb')
     pickle.dump(Node_Dictionary, output_file)
     output_file.close()
 
@@ -115,12 +123,36 @@ if __name__ == "__main__":
     ###
 
     # average_each_station()
+    # write_pkl()
+    Avgs = AvgRidership()
 
-    # ridership = AvgRidership()
+    # stations = ['Fullerton (Red, Brown & Purple Lines)','51st (Green Line)','Berwyn (Red Line)','Jarvis (Red Line)']
+    # for f in stations:
+    #     print(f, "=", avgs.getRidership(f))
 
-    write_pkl()
+    with open('node_names.txt') as f:
+        node_names = f.readlines()
+    # you may also want to remove whitespace characters like `\n` at the end of each line
+    node_names = [x.strip() for x in node_names] 
 
-    stations = ['Fullerton (Red, Brown & Purple Lines)','51st (Green Line)','Berwyn (Red Line)','Jarvis (Red Line)','']
+    total = 0
+    for node in node_names:
+        rides = int(Avgs.getRidership(ut.decomma(node)))
+        # print(node, "=", rides)
+        total += rides
+
+
+    print("Total = ", total)
+    print()
+
+    tot = 0
+    for key in Avgs.avg_ridership:
+        tot += int(Avgs.avg_ridership[key])
+
+
+    print("Just dict values total = ", tot)
+
+
 
 
 
