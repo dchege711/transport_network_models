@@ -3,6 +3,8 @@ import utilities as ut
 import kd_methods
 import random
 import average_day_rates
+import sys
+import pickle
 
 testing = False
 
@@ -151,6 +153,9 @@ def sample_from_sorted_origins():
             # Set k to the avg number of people who get on at the current_origin_station
             k = int(Avgs.getRidership(current_origin_station))
 
+            if testing:
+                k = int(0.01 * k)
+
             sampled_trips = []
             # print(current_origin_station, ":", k)
             if k > len(current_station_trips):
@@ -182,6 +187,9 @@ def sample_from_sorted_origins():
 
 
     k = int(Avgs.getRidership(current_origin_station))
+    if testing:
+        k = int(0.01 * k)
+
     sampled_trips = []
     # print(current_origin_station, ":", k)
     if k > len(current_station_trips):
@@ -202,6 +210,152 @@ def sample_from_sorted_origins():
     output_file.close()
     print("Done")
 
+def add_destination_stations():
+
+    input_file_name = 'sampled_kornhauser_trips.csv'
+    output_file_name = 'sampled_kornhauser_metro_journeys.csv' # 'sampled_kornhauser_trips_test.csv' # 
+
+    if testing:
+        input_file_name = 'sampled_kornhauser_trips_test.csv'
+        output_file_name = 'sampled_kornhauser_metro_journeys_test.csv'
+
+    input_file = open(input_file_name, 'r')
+    output_file = open(output_file_name, 'w')
+
+    dest_lat_index = 15
+    dest_lng_index = 14
+
+    tree = kd_methods.KdTree()
+
+    header = input_file.readline() # Handle the header
+    output_file.write(header[:-1] + ",Dest Station\n")
+
+    status_every = 500000
+
+    print("Writing destinations to: " + output_file_name)
+    counter = 0
+    for line in input_file:
+
+        items = line.split(",")
+        stop_lat = float(items[dest_lat_index])
+        stop_lng = float(items[dest_lng_index])
+        dest_station = tree.nearest(stop_lat, stop_lng)[0]
+
+        output_file.write(line[:-1] + "," + ut.decomma(dest_station) + "\n")
+
+        counter += 1
+        if counter % status_every == 0:
+            print("Processed", str(counter), "lines")
+
+    input_file.close()
+    output_file.close()
+
+    print("Wrote", counter, "lines to the output file")
+    print("\nDone\n")
+
+def remove_extra_columns_from_journeys():
+
+    input_file_name = 'sampled_kornhauser_metro_journeys.csv'
+    output_file_name = 'sampled_kornhauser_metro_journeys_basic.csv' # 'sampled_kornhauser_trips_test.csv' # 
+
+    if testing:
+        input_file_name = 'sampled_kornhauser_metro_journeys_test.csv'
+        output_file_name = 'sampled_kornhauser_metro_journeys_test_basic.csv'
+
+    input_file = open(input_file_name, 'r')
+    output_file = open(output_file_name, 'w')
+
+    orig_index = 19
+    dest_index = 20
+
+    tree = kd_methods.KdTree()
+
+    header = input_file.readline() # Handle the header
+    output_file.write("Origin Station,Dest Station\n")
+
+    status_every = 100000
+
+    print("Writing just orig/dest stations to: " + output_file_name)
+    counter = 0
+    for line in input_file:
+
+        items = line.split(",")
+        orig = items[orig_index]
+        dest = items[dest_index]
+
+        output_file.write(orig + "," + dest)
+
+        counter += 1
+        if counter % status_every == 0:
+            print("Wrote", str(counter), "lines")
+
+    input_file.close()
+    output_file.close()
+
+    print("Wrote", counter, "lines to the output file")
+    print("\nDone\n")
+
+# returns a list of the station names
+def get_station_names():
+
+    with open('node_names.txt') as f:
+        node_names = f.readlines()
+    # you may also want to remove whitespace characters like `\n` at the end of each line
+    node_names = [x.strip() for x in node_names]
+    return node_names
+
+def tally_up_journeys():
+
+    input_file_name = 'sampled_kornhauser_metro_journeys_basic.csv'
+    output_file_name = 'journey_counts.pkl'
+
+    if testing:
+        input_file_name = 'sampled_kornhauser_metro_journeys_test_basic.csv'
+        output_file_name = "journey_counts_test.pkl"
+
+    output_path = ut.get_path(output_file_name)
+    input_file = open(input_file_name, 'r')
+    output_file = open(output_path, 'wb')
+
+    Journey_Dict = {}
+    station_names = get_station_names()
+
+    for orig_station in station_names:
+        for dest_station in station_names:
+            if orig_station != dest_station:
+                # initialize the counter for this journey to 0
+                key = (orig_station, dest_station)
+                Journey_Dict[key] = 0
+
+    status_every = 100000
+
+    print("Tallying up journeys from: " + input_file_name)
+    print("Writing journeys dict to: " + output_path)
+
+    header = input_file.readline() # Ignore header
+
+    counter = 0
+    for line in input_file:
+
+        items = line.split(",")    
+        orig = ut.recomma(items[0].strip())
+        dest = ut.recomma(items[1].strip())
+        key = (orig, dest)
+
+        if orig != dest:
+            Journey_Dict[key] += 1
+
+
+        counter += 1
+        if counter % status_every == 0:
+            print("Tallied up", str(counter), "journeys")
+
+    pickle.dump(Journey_Dict, output_file)
+    input_file.close()
+    output_file.close()
+
+    print("\nDone\n")
+
 
 if __name__ == "__main__":
 
@@ -209,8 +363,15 @@ if __name__ == "__main__":
     # add_origin_stations_to_pruned_data()
     # print("\n\nSORTING BY ORIGIN STATION \n\n")
     # sort_by_origin_station()
-    print("\n\nSAMPLING FROM SORTED ORIGIN STATIONS \n\n")
-    sample_from_sorted_origins()
+    # print("\n\nSAMPLING FROM SORTED ORIGIN STATIONS \n\n")
+    # sample_from_sorted_origins()
+    # print("\nADDING DESTINATION STATIONS \n")
+    # add_destination_stations()
+    # print("\nREMOVING EXTRA COLUMNS FROM JOURNEYS\n")
+    # remove_extra_columns_from_journeys()
+    print("\nTALLYING UP JOURNEYS\n")
+    tally_up_journeys()
+
 
 
 

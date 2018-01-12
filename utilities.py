@@ -26,6 +26,8 @@ file_locations = {
     "metro_graph.pkl" : "pickle_files",
     "station_kdtree.pkl" : "pickle_files",
     "average_ridership_dict.pkl" : "pickle_files",
+    "journey_counts.pkl" : "pickle_files",
+    "journey_counts_test.pkl" : "pickle_files",
 
     # Files to help simulate flow on the network
     "cta_ridership_daily_totals.csv" : "cta_ridership_data"

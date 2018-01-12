@@ -16,11 +16,16 @@ import random
 
 class metro_graph():
     
-    def __init__(self, journeys=None):
+    def __init__(self):
         self.G = nx.DiGraph()
+        # SAM
         # Expecting a dict with keys as a (origin_station, destination_station)
         # and the value being how many people are taking that trip.
-        self.journeys = journeys 
+        journey_dict_file_name = 'journey_counts.pkl'
+        input_path = ut.get_path(journey_dict_file_name)
+        input_file = open(input_path,'rb')
+        self.journeys = pickle.load(input_file)
+        input_file.close()
         
         # Add the stations as nodes
         for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
@@ -212,6 +217,7 @@ class metro_graph():
             
     
 def main():
+
     test_graph = metro_graph()
     test_station = "Addison (Brown Line)"
     test_station_2 = "Paulina (Brown Line)"
