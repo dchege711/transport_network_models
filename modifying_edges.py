@@ -11,31 +11,29 @@ from pprint import pprint
 import networkx as nx
 import numpy as np
 
-def delete_by_betweeness_centrality(graph):
-    """
-    Remarks:
-        * Slow, takes about 6sec to run this. 
-        * The plot doesn't show any pattern to it.
-        
-    """
+def delete_one_edge_and_evaluate(graph):
     graph = deepcopy(graph)
     edge_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
+    unmodified_graph_score = graph_measure(graph, alpha=alpha)
     removal_effects = []
     centralities = []
     edges_in_order = []
     i = 1
     alpha = 2
     flows = []
-    unmodified_graph_score = graph_measure(graph, alpha=alpha)
     for edge in edge_centralities:
+        # Get an in-order record of the edges and their flows
         edges_in_order.append(edge)
         flow = graph.get_edge_attribute(edge=edge, attribute_name="flow")
         flows.append(flow)
+        # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
         effect = ((graph_measure(graph, alpha=alpha) - unmodified_graph_score)/unmodified_graph_score)*100.0
         removal_effects.append(effect)
+        # Experiment part 2: Re-insert the edge so that results are comparable
         centralities.append(edge_centralities[edge])
         graph.add_edge(edge=edge, flow=flow)
+        
         if (i % 20 == 0): print("Iteration:", i, "centrality:", edge_centralities[edge])
         i += 1
     
@@ -75,8 +73,6 @@ def delete_by_betweeness_centrality(graph):
     
 def graph_measure(graph, alpha=0.5):
     return graph.graph_popularity(alpha=alpha) + graph.graph_activity(alpha=alpha)
-    # return graph.graph_activity(alpha=alpha)
-
 
 def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot=None, file_name=None):
     plt.grid(True)
@@ -99,7 +95,7 @@ def main():
     graph = metro_graph()
     graph.randomize_all_edge_weights(1000)
     
-    delete_by_betweeness_centrality(graph)
+    delete_one_edge_and_evaluate(graph)
 
 if __name__ == "__main__":
     main()
