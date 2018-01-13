@@ -29,7 +29,7 @@ for journey in journeys:
     else:
         if a not in origin_absent:
             origin_absent[a] = []
-        origin_absent.append(c)
+        origin_absent[a].append(c)
     if test_graph.has_node(b):
         if b not in dest_present:
             dest_present[b] = []

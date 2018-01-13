@@ -12,16 +12,20 @@ import networkx as nx
 import numpy as np
 import time
 
-def delete_one_edge_and_evaluate(graph):
+def delete_one_edge_and_evaluate(graph, test_type="metro_performance", 
+    x_axis_data="flows", alpha=2):
+
     graph = deepcopy(graph)
-    alpha = 2
     edge_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
-    unmodified_graph_score = graph_measure(graph, alpha=alpha)
+    unmodified_graph_score = graph_measure(graph, test_type, alpha=alpha)
+    
     removal_effects = []
     centralities = []
     edges_in_order = []
-    i = 1
     flows = []
+    distances = []
+    i = 1
+    
     for edge in edge_centralities:
         start_time = time.time()
         # Get an in-order record of the edges and their flows
@@ -30,10 +34,12 @@ def delete_one_edge_and_evaluate(graph):
         capacity = graph.get_edge_attribute(edge=edge, attribute_name="capacity")
         distance = graph.get_edge_attribute(edge=edge, attribute_name="distance")
         flows.append(flow)
+        distances.append(distance)
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
         graph.fill_flows_from_mapped_data()
-        effect = ((graph_measure(graph, alpha=alpha) - unmodified_graph_score)/unmodified_graph_score)*100.0
+        measure = graph_measure(graph, test_type, alpha=alpha)
+        effect = ((measure - unmodified_graph_score)/unmodified_graph_score)*100.0
         removal_effects.append(effect)
         # Experiment part 2: Re-insert the edge so that results are comparable
         centralities.append(edge_centralities[edge])
@@ -42,44 +48,67 @@ def delete_one_edge_and_evaluate(graph):
         print("Iteration:", i, "duration:", str(end_time - start_time), "seconds\n")
         i += 1
         if i == 10: break
+        
+    plot_options = {
+        "flows" : {
+            "x_on_the_plot": flows,
+            "xlabel": "Flow of the Removed Edge"
+        },
+        "centralities" : {
+            "x_on_the_plot": centralities,
+            "xlabel": "Betweenness Centrality of the Removed Edge"
+        },
+        "distances" : {
+            "x_on_the_plot": distances,
+            "xlabel": "Length of the Removed Edge"
+        },
+        "metro_performance": {
+            "title": "Percentage Effect of Removing a Link",
+            "file_name": "metro_performance.png"
+        },
+        "activity_and_popularity": {
+            "title": r"Percentage Effect of Removing a Link ($\alpha$ = " + str(alpha) + " )",
+            "file_name": "flow_alpha_" + str(alpha) + ".png"
+        }
+    }
     
     make_plot(
-        x=centralities, y=removal_effects, type_of_plot="scatter",
-        ylabel="Percentage Change in Graph Activity", 
-        xlabel="Betweenness Centrality of the Removed Edge",
-        title=r"Effect of Removing a Link ($\alpha$ = " + str(alpha) + " )",
-        file_name="centralities_alpha_" + str(alpha) + ".png"
-    )
-    
-    make_plot(
-        x=flows, y=removal_effects, type_of_plot="scatter",
-        ylabel="Percentage Change in Graph Activity", 
-        xlabel="Flow of the Removed Edge",
-        title=r"Effect of Removing a Link ($\alpha$ = " + str(alpha) + " )",
-        file_name="flow_alpha_" + str(alpha) + ".png"
+        x=plot_options[x_axis_data]["x_on_the_plot"], 
+        y=removal_effects, type_of_plot="scatter",
+        ylabel="Percentage Change in Graph Performance", 
+        xlabel=plot_options[x_axis_data]["xlabel"],
+        title=plot_options[test_type]["title"],
+        file_name=x_axis_data + str(alpha) + ".png"
     )
     
     indexes_in_sorted_list = np.argsort(removal_effects)
-    for index in indexes_in_sorted_list[-2:]:
-        print(
-            "{0:60}".format(str(edges_in_order[index])), 
-            "\tcentrality =", "{0:.4f}".format(centralities[index]), 
-            "\teffect (%) =", "{0:.4f}".format(removal_effects[index]), 
-            "\tflow       =", flows[index]
-        )
-    for index in indexes_in_sorted_list[:2]:
-        print(
-            "{0:60}".format(str(edges_in_order[index])), 
-            "centrality =", "{0:.4f}".format(centralities[index]), 
-            "effect (%) =", "{0:.4f}".format(removal_effects[index]), 
-            "flow       =", flows[index]
-        )
-    print("\nFor reference, the maximum flow on an edge was", np.max(flows), "and the max centrality was", np.max(centralities))
         
+    def print_stats(stats_indexes):
+        for index in stats_indexes:
+            print(
+                "{0:60}".format(str(edges_in_order[index])), 
+                " centrality  =", "{0:.4f}".format(centralities[index]),  
+                " flow        =", flows[index],
+                " length (km) =", "{0:.4f}".format(distances[index]),
+                " effect (%)  =", "{0:.4f}".format(removal_effects[index])
+            )
     
-def graph_measure(graph, alpha=0.5):
-    # return graph.graph_popularity(alpha=alpha) + graph.graph_activity(alpha=alpha)
-    return graph.metro_network_performance()
+    print_stats(indexes_in_sorted_list[-2:])
+    print_stats(indexes_in_sorted_list[:2])
+    print( 
+        "\nMaximum flow on an edge was", "{0:,}".format(np.max(flows)), "passengers", 
+        "\nMax centrality on an edge was", "{0:.4f}".format(np.max(centralities)),
+        "\nMax length of an edge (section) was", "{0:.4f}".format(np.max(distances)), "km"
+    )
+    
+    
+    
+def graph_measure(graph, test_type, **kwargs):
+    if test_type == "activity_and_popularity":
+        alpha = kwargs["alpha"]
+        return graph.graph_popularity(alpha=alpha) + graph.graph_activity(alpha=alpha)
+    elif test_type == "metro_performance":
+        return graph.metro_network_performance()
 
 def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot=None, file_name=None):
     plt.grid(True)

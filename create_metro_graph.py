@@ -67,11 +67,13 @@ class metro_graph():
         # Cache the routes followed by each journey since fill_flows_from_mapped_data()
         # has poor performance (~50 seconds per run)
         self.previous_path_for_journeys = {}
+        for journey in self.journeys:
+            self.previous_path_for_journeys[journey] = []
         
-        # Attach capacities to the edges (i.e. max number of people that can be transported)
+        # Set the default values for the edges
         for edge in self.edges():
-            self.add_attribute_to_edge(edge=edge, capacity=10000)
-            
+            self.add_attribute_to_edge(edge=edge, capacity=50000, flow=0)
+        
         self.fill_flows_from_mapped_data()
     
     def add_node(self, node, **kwargs):
@@ -154,65 +156,43 @@ class metro_graph():
     def fill_flows_from_mapped_data(self):
         print("Looking for shortest paths...")
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
-        failed = {}
-        found_paths = 0
         print("Fitting the journeys...")
-        california_trouble = 0
-        all_trouble = 0
-        j = 0
         start_time = time.time()
+        missed_path = {}
+        cached = 0
+        
         for journey in self.journeys:
-            hops = None
             try:
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
                 if shortest_path == self.previous_path_for_journeys[journey]:
+                    cached += 1
                     continue
                 
                 else:
                     hops = len(shortest_path) - 1
                     for i in range(hops):
-                        try:
-                            temp = self.get_edge_attribute(
-                                source_node=shortest_path[i], 
-                                target_node=shortest_path[i+1], 
-                                attribute_name="flow"
-                            )
-                        except Exception as e:
-                            temp = 0
-                            if self.has_edge(source_node=shortest_path[i], target_node=shortest_path[i+1]):
-                                pass 
-                            else:
-                                print("Exception when dealing with hops....")
-                                print(e)
-                            
-                            
+                        edge = (shortest_path[i], shortest_path[i+1])
+                        temp = self.get_edge_attribute(
+                            edge=edge, 
+                            attribute_name="flow"
+                        )
                         self.add_attribute_to_edge(
-                            source_node=shortest_path[i], 
-                            target_node=shortest_path[i+1],
+                            edge=edge,
                             flow=temp + self.journeys[journey]
                         )
-                    found_paths += 1
                     self.previous_path_for_journeys[journey] = shortest_path
                     
             except Exception as e:
-                all_trouble += 1
                 try:
                     shortest_path = all_shortest_paths[journey[0]][journey[1]]
                 except:
-                    # pass
-                    if journey[0] == "California  (Blue Line)" or journey[1] == "California  (Blue Line)":
-                        california_trouble += 1
-                        if california_trouble == 1:
-                            print("\nException for", journey, "...")
-                            print("Didn't find shortest path!\n")
-                    
-                    else:
-                        print("\nException for", journey, "...")
-                        print("Didn't find shortest path!\n")
-                    
+                    if journey not in missed_path:
+                        missed_path[journey] = 0
+                    missed_path[journey] += 1
+  
         end_time = time.time()
-        
-        print(california_trouble, "/", all_trouble, "of all missed paths were for California (Blue Line)")
+        print("Retrieved", cached, "results from cache", len(missed_path), "missed journeys...")
+        # print(self.get_edge_attribute(edge=('95th/Dan Ryan (Red Line)', '87th (Red Line)'), attribute_name="flow"))
         print("Completed path matching...", str(end_time - start_time))
         
     def add_attribute_to_edge(self, edge=None, source_node=None, target_node=None, **kwargs):
@@ -330,6 +310,9 @@ def main():
     assert (test_graph.number_of_edges() == num_edges + 1)
     non_existent_edge = (new_node_2, new_node_1)
     assert(test_graph.has_edge(edge=non_existent_edge) == False)
+    test_graph.remove_edge(edge=new_edge)
+    assert(test_graph.number_of_edges() == num_edges)
+    test_graph.add_edge(edge=new_edge, flow=5000)
     print("passed!")
     
     print(print_padding.format("Testing add_attribute_to_edge() and get_edge_attribute()"), end="... ")
