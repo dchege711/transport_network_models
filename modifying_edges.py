@@ -78,7 +78,7 @@ def delete_one_edge_and_evaluate(graph, test_type="metro_performance",
         ylabel="Percentage Change in Graph Performance", 
         xlabel=plot_options[x_axis_data]["xlabel"],
         title=plot_options[test_type]["title"],
-        file_name=x_axis_data + str(alpha) + ".png"
+        file_name=plot_options[test_type]["file_name"]
     )
     
     indexes_in_sorted_list = np.argsort(removal_effects)
