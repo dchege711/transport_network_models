@@ -94,7 +94,6 @@ North/Clybourn (Red Line)	41.910655, -87.649177
 Western (Blue Line - O'Hare Branch)	41.916157, -87.687364
 Armitage (Brown & Purple Lines)	41.918217, -87.652644
 California (Blue Line)	41.921939, -87.69689
-California  (Blue Line)	41.921939, -87.69689
 Fullerton (Red, Brown & Purple Lines)	41.925051, -87.652866
 Logan Square (Blue Line)	41.929728, -87.708541
 Diversey (Brown & Purple Lines)	41.932732, -87.653131

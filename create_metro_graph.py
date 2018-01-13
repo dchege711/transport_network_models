@@ -187,20 +187,20 @@ class metro_graph():
                 try:
                     shortest_path = all_shortest_paths[journey[0]][journey[1]]
                 except:
-                    pass
-                    # if journey[0] == "California  (Blue Line)" or journey[1] == "California  (Blue Line)":
-                    #     california_trouble += 1
-                    #     if california_trouble == 1:
-                    #         print("\nException for", journey, "...")
-                    #         print("Didn't find shortest path!\n")
-                    # 
-                    # else:
-                    #     print("\nException for", journey, "...")
-                    #     print("Didn't find shortest path!\n")
+                    # pass
+                    if journey[0] == "California  (Blue Line)" or journey[1] == "California  (Blue Line)":
+                        california_trouble += 1
+                        if california_trouble == 1:
+                            print("\nException for", journey, "...")
+                            print("Didn't find shortest path!\n")
+                    
+                    else:
+                        print("\nException for", journey, "...")
+                        print("Didn't find shortest path!\n")
                     
         end_time = time.time()
         
-        #print(california_trouble, "/", all_trouble, "of all missed paths were for California (Blue Line)")
+        print(california_trouble, "/", all_trouble, "of all missed paths were for California (Blue Line)")
         print("Completed path matching...", str(end_time - start_time))
                     
         # print("Found paths for", found_paths, str(len(self.journeys)))
