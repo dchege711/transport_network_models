@@ -13,6 +13,7 @@ import utilities as ut
 import sys
 from pprint import pprint
 import random
+import time
 
 class metro_graph():
     
@@ -26,6 +27,14 @@ class metro_graph():
         input_file = open(input_path,'rb')
         self.journeys = pickle.load(input_file)
         input_file.close()
+        
+        # Remove the trips that have no passengers
+        journeys_to_pop = []
+        for journey in self.journeys:
+            if self.journeys[journey] == 0:
+                journeys_to_pop.append(journey)
+        for journey in journeys_to_pop:
+            self.journeys.pop(journey)
         
         # Add the stations as nodes
         for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
@@ -142,7 +151,12 @@ class metro_graph():
         failed = {}
         found_paths = 0
         print("Fitting the journeys...")
+        california_trouble = 0
+        all_trouble = 0
+        j = 0
+        start_time = time.time()
         for journey in self.journeys:
+            hops = None
             try:
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
                 hops = len(shortest_path) - 1
@@ -155,6 +169,12 @@ class metro_graph():
                         )
                     except Exception as e:
                         temp = 0
+                        if self.has_edge(source_node=shortest_path[i], target_node=shortest_path[i+1]):
+                            pass 
+                        else:
+                            print("Exception when dealing with hops....")
+                            print(e)
+                        
                         
                     self.add_attribute_to_edge(
                         source_node=shortest_path[i], 
@@ -163,13 +183,25 @@ class metro_graph():
                     )
                 found_paths += 1
             except Exception as e:
-                pass
-                # e = str(e)
-                # if e not in failed:
-                #     failed[e] = 1
-                # else:
-                #     failed[e] += 1
-        print("Completed path matching...")
+                all_trouble += 1
+                try:
+                    shortest_path = all_shortest_paths[journey[0]][journey[1]]
+                except:
+                    pass
+                    # if journey[0] == "California  (Blue Line)" or journey[1] == "California  (Blue Line)":
+                    #     california_trouble += 1
+                    #     if california_trouble == 1:
+                    #         print("\nException for", journey, "...")
+                    #         print("Didn't find shortest path!\n")
+                    # 
+                    # else:
+                    #     print("\nException for", journey, "...")
+                    #     print("Didn't find shortest path!\n")
+                    
+        end_time = time.time()
+        
+        #print(california_trouble, "/", all_trouble, "of all missed paths were for California (Blue Line)")
+        print("Completed path matching...", str(end_time - start_time))
                     
         # print("Found paths for", found_paths, str(len(self.journeys)))
         # print("Failed for...")
