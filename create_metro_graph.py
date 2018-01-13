@@ -137,9 +137,11 @@ class metro_graph():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
                 
     def fill_flows_from_mapped_data(self):
+        print("Looking for shortest paths...")
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
         failed = {}
         found_paths = 0
+        print("Fitting the journeys...")
         for journey in self.journeys:
             try:
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
@@ -161,11 +163,13 @@ class metro_graph():
                     )
                 found_paths += 1
             except Exception as e:
-                e = str(e)
-                if e not in failed:
-                    failed[e] = 1
-                else:
-                    failed[e] += 1
+                pass
+                # e = str(e)
+                # if e not in failed:
+                #     failed[e] = 1
+                # else:
+                #     failed[e] += 1
+        print("Completed path matching...")
                     
         # print("Found paths for", found_paths, str(len(self.journeys)))
         # print("Failed for...")
@@ -243,6 +247,7 @@ class metro_graph():
                     inefficiency = inefficiency * 2
             
             running_sum += flow * distance - distance * cost_per_unit_distance - inefficiency
+        print("Completed metro_network_performance()...")
         return running_sum
             
     

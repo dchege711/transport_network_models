@@ -10,32 +10,38 @@ from matplotlib import pyplot as plt
 from pprint import pprint
 import networkx as nx
 import numpy as np
+import time
 
 def delete_one_edge_and_evaluate(graph):
     graph = deepcopy(graph)
+    alpha = 2
     edge_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
     unmodified_graph_score = graph_measure(graph, alpha=alpha)
     removal_effects = []
     centralities = []
     edges_in_order = []
     i = 1
-    alpha = 2
     flows = []
     for edge in edge_centralities:
+        start_time = time.time()
         # Get an in-order record of the edges and their flows
         edges_in_order.append(edge)
         flow = graph.get_edge_attribute(edge=edge, attribute_name="flow")
+        capacity = graph.get_edge_attribute(edge=edge, attribute_name="capacity")
+        distance = graph.get_edge_attribute(edge=edge, attribute_name="distance")
         flows.append(flow)
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
+        graph.fill_flows_from_mapped_data()
         effect = ((graph_measure(graph, alpha=alpha) - unmodified_graph_score)/unmodified_graph_score)*100.0
         removal_effects.append(effect)
         # Experiment part 2: Re-insert the edge so that results are comparable
         centralities.append(edge_centralities[edge])
-        graph.add_edge(edge=edge, flow=flow)
-        
-        if (i % 20 == 0): print("Iteration:", i, "centrality:", edge_centralities[edge])
+        graph.add_edge(edge=edge, flow=flow, capacity=capacity, distance=distance)
+        end_time = time.time()
+        print("Iteration:", i, "duration:", str(end_time - start_time), "seconds\n")
         i += 1
+        if i == 10: break
     
     make_plot(
         x=centralities, y=removal_effects, type_of_plot="scatter",
@@ -94,8 +100,7 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot
 def main():
     
     graph = metro_graph()
-    graph.randomize_all_flows(1000)
-    
+    # graph.randomize_all_flows(1000)
     delete_one_edge_and_evaluate(graph)
 
 if __name__ == "__main__":
