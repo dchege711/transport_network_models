@@ -34,7 +34,7 @@ class metro_graph():
             if self.journeys[journey] == 0:
                 journeys_to_pop.append(journey)
         for journey in journeys_to_pop:
-            self.journeys.pop(journey)
+            self.journeys.pop(journey) 
         
         # Add the stations as nodes
         for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
@@ -63,9 +63,15 @@ class metro_graph():
             
         # self.store_as_pickle()
         self._set_distances_as_edge_attributes()
+        
+        # Cache the routes followed by each journey since fill_flows_from_mapped_data()
+        # has poor performance (~50 seconds per run)
+        self.previous_path_for_journeys = {}
+        
         # Attach capacities to the edges (i.e. max number of people that can be transported)
         for edge in self.edges():
             self.add_attribute_to_edge(edge=edge, capacity=10000)
+            
         self.fill_flows_from_mapped_data()
     
     def add_node(self, node, **kwargs):
@@ -159,29 +165,35 @@ class metro_graph():
             hops = None
             try:
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
-                hops = len(shortest_path) - 1
-                for i in range(hops):
-                    try:
-                        temp = self.get_edge_attribute(
+                if shortest_path == self.previous_path_for_journeys[journey]:
+                    continue
+                
+                else:
+                    hops = len(shortest_path) - 1
+                    for i in range(hops):
+                        try:
+                            temp = self.get_edge_attribute(
+                                source_node=shortest_path[i], 
+                                target_node=shortest_path[i+1], 
+                                attribute_name="flow"
+                            )
+                        except Exception as e:
+                            temp = 0
+                            if self.has_edge(source_node=shortest_path[i], target_node=shortest_path[i+1]):
+                                pass 
+                            else:
+                                print("Exception when dealing with hops....")
+                                print(e)
+                            
+                            
+                        self.add_attribute_to_edge(
                             source_node=shortest_path[i], 
-                            target_node=shortest_path[i+1], 
-                            attribute_name="flow"
+                            target_node=shortest_path[i+1],
+                            flow=temp + self.journeys[journey]
                         )
-                    except Exception as e:
-                        temp = 0
-                        if self.has_edge(source_node=shortest_path[i], target_node=shortest_path[i+1]):
-                            pass 
-                        else:
-                            print("Exception when dealing with hops....")
-                            print(e)
-                        
-                        
-                    self.add_attribute_to_edge(
-                        source_node=shortest_path[i], 
-                        target_node=shortest_path[i+1],
-                        flow=temp + self.journeys[journey]
-                    )
-                found_paths += 1
+                    found_paths += 1
+                    self.previous_path_for_journeys[journey] = shortest_path
+                    
             except Exception as e:
                 all_trouble += 1
                 try:
@@ -202,10 +214,6 @@ class metro_graph():
         
         print(california_trouble, "/", all_trouble, "of all missed paths were for California (Blue Line)")
         print("Completed path matching...", str(end_time - start_time))
-                    
-        # print("Found paths for", found_paths, str(len(self.journeys)))
-        # print("Failed for...")
-        # pprint(failed)
         
     def add_attribute_to_edge(self, edge=None, source_node=None, target_node=None, **kwargs):
         relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
