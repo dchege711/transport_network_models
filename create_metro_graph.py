@@ -56,7 +56,7 @@ class metro_graph():
         self._set_distances_as_edge_attributes()
         # Attach capacities to the edges (i.e. max number of people that can be transported)
         for edge in self.edges():
-            self.add_attribute_to_edge(self, edge=edge, capacity=10000)
+            self.add_attribute_to_edge(edge=edge, capacity=10000)
         self.fill_flows_from_mapped_data()
     
     def add_node(self, node, **kwargs):
@@ -137,21 +137,39 @@ class metro_graph():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
                 
     def fill_flows_from_mapped_data(self):
-        all_shortest_paths = nx.shortest_paths(self.G, weight="distance")
+        all_shortest_paths = nx.shortest_path(self.G, weight="distance")
+        failed = {}
+        found_paths = 0
         for journey in self.journeys:
-            shortest_path = all_shortest_paths[journey[0]][journey[1]]
-            hops = len(shortest_path) - 1
-            for i in range(hops):
-                temp = self.get_edge_attribute(
-                    source_node=shortest_path[i], 
-                    target_node=shortest_path[i+1], 
-                    attribute_name="flow"
-                )
-                self.add_attribute_to_edge(
-                    source_node=shortest_path[i], 
-                    target_node=shortest_path[i+1],
-                    flow=temp + self.journeys[journey]
-                )
+            try:
+                shortest_path = all_shortest_paths[journey[0]][journey[1]]
+                hops = len(shortest_path) - 1
+                for i in range(hops):
+                    try:
+                        temp = self.get_edge_attribute(
+                            source_node=shortest_path[i], 
+                            target_node=shortest_path[i+1], 
+                            attribute_name="flow"
+                        )
+                    except Exception as e:
+                        temp = 0
+                        
+                    self.add_attribute_to_edge(
+                        source_node=shortest_path[i], 
+                        target_node=shortest_path[i+1],
+                        flow=temp + self.journeys[journey]
+                    )
+                found_paths += 1
+            except Exception as e:
+                e = str(e)
+                if e not in failed:
+                    failed[e] = 1
+                else:
+                    failed[e] += 1
+                    
+        # print("Found paths for", found_paths, str(len(self.journeys)))
+        # print("Failed for...")
+        # pprint(failed)
         
     def add_attribute_to_edge(self, edge=None, source_node=None, target_node=None, **kwargs):
         relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
@@ -281,17 +299,12 @@ def main():
     except KeyError:
         print("passed!")
 
-    # test_graph.randomize_all_flows(1000)
+    # test_graph.randomize_all_flows(10)
     print(print_padding.format("Testing graph_activity() and node_activity()"), end="... ")    
     print(test_graph.graph_activity(alpha=0.5))
     print(print_padding.format("Testing graph_popularity() and node_popularity()"), end="... ")
     print(test_graph.graph_popularity(alpha=0.5))
-    
-    # Print the edge flows 
-    for edge in test_graph.edges():
-        print(edge, ":", test_graph.get_edge_attribute(edge=edge, attribute_name="flow"))
-    
-    
+
 
 if __name__ == "__main__":
     main()
