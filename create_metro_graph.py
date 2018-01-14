@@ -251,7 +251,7 @@ class metro_graph():
         inward_edges = self.edges(nodes=node, incoming=True)
         return self._sum_weights_to_power_alpha(alpha, inward_edges, edge_attribute)
     
-    def metro_network_performance(self, cost_per_unit_distance=10):
+    def metro_network_performance(self, cost_per_unit_distance=10, utility_over_cost=2):
         """
         Rationale:
         1. Reward people getting to destinations through shorter routes 
@@ -272,7 +272,9 @@ class metro_graph():
                 if inefficiency > capacity * 0.4:
                     inefficiency = inefficiency * 2
             
-            running_sum += flow * distance - distance * cost_per_unit_distance - inefficiency
+            utility = (flow * distance) * utility_over_cost
+            cost = (distance * cost_per_unit_distance + inefficiency) / utility_over_cost
+            running_sum += utility - cost 
         return running_sum
             
     
