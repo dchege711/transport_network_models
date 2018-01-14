@@ -76,7 +76,8 @@ class metro_graph():
         for edge in self.edges():
             self.add_attribute_to_edge(edge=edge, capacity=80000, flow=0)
         
-        self.fill_flows_from_mapped_data(cache_result=True) 
+        results = self.fill_flows_from_mapped_data(cache_result=True) 
+        assert (results[0] == 0) "All trips should be accessible during initialization."
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
@@ -156,40 +157,49 @@ class metro_graph():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
                 
     def fill_flows_from_mapped_data(self, removed_edge=None, removed_edge_dist=None, cache_result=False):
+        # The removed edge may have caused the shortest paths to change
+        # The change is measured against the initial complete graph with all edges
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
         all_shortest_paths_lengths = nx.shortest_path_length(self.G, weight="distance")
+        
+        # Investigate how the changed paths have affected the flow
         num_missed_trips, changed_trips_distance, num_conserved_trips = 0, 0, 0
         for journey in self.journeys:
             flow = self.journeys[journey]
             try:
+                # If this doesn't lead to an exception, then the journey is still feasible
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
                 shortest_path_length = all_shortest_paths_lengths[journey[0]][journey[1]]
                 
+                # If this journey still follows the original path, note that down, and then skip
                 if shortest_path == self.previous_path_for_journeys[journey]:
-                    # If the trips haven't been affected by the change, do nothing
                     num_conserved_trips += flow
                     continue
                 
                 else:
-                    # If the trips have been affected by the change, transfer them
-                    hops = len(shortest_path) - 1
-                    for i in range(hops):
+                    # The journey has a new path... 
+                    # ... add the flow in this journey to the new shortest path
+                    for i in range(len(shortest_path) - 1):
                         edge = (shortest_path[i], shortest_path[i+1])
                         self._helper_for_adjusting_flow(edge, flow)
                         
-                    # Avoid double counting the trips
+                    # ... subtract the flow of this journey from its previous shortest path
                     previous_shortest_path = self.previous_path_for_journeys[journey]
-                    previous_shortest_path_length = self.previous_path_lengths_for_journeys[journey]
-                    hops = len(previous_shortest_path) - 1
                     negated_flow = flow * -1
-                    for i in range(hops):
+                    for i in range(len(previous_shortest_path) - 1):
                         edge = (previous_shortest_path[i], previous_shortest_path[i+1])
                         if edge == removed_edge:
                             continue
                         self._helper_for_adjusting_flow(edge, negated_flow)
+                        
+                    # If we wish to store these as the default values, then do so
                     if cache_result:
                         self.previous_path_for_journeys[journey] = shortest_path
                         self.previous_path_lengths_for_journeys[journey] = shortest_path_length
+                        
+                    # Note how much the distance has changed for this journey 
+                    previous_shortest_path_length = self.previous_path_lengths_for_journeys[journey]
+                    changed_trips_distance += previous_shortest_path_length * flow
                     
             except Exception as e:
                 # For all the currently infeasible trips
