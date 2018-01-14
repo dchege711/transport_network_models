@@ -25,13 +25,6 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
     removal_effects_alpha_0, removal_effects_alpha_1, removal_effects, centralities = [], [], [], []
     edges_in_order, missed_trips, flows, distances, changed_trips_distance, conserved_trips = [], [], [], [], [], []
     
-    # missed, changed_dist, conserved = graph.fill_flows_from_mapped_data(
-    #     removed_edge=edge, removed_edge_dist=distance
-    # )
-    # missed_trips.append(missed)
-    # changed_trips_distance.append(changed_dist)
-    # conserved_trips.append(conserved)
-    
     i = 0
     start_time = time.time()
     for edge in edge_centralities:

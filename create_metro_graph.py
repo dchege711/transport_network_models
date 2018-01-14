@@ -76,7 +76,7 @@ class metro_graph():
         for edge in self.edges():
             self.add_attribute_to_edge(edge=edge, capacity=80000, flow=0)
         
-        self.fill_flows_from_mapped_data()
+        self.fill_flows_from_mapped_data(cache_result=True)
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
@@ -155,7 +155,7 @@ class metro_graph():
             for edge in self.edges():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
                 
-    def fill_flows_from_mapped_data(self, removed_edge=None, removed_edge_dist=None):
+    def fill_flows_from_mapped_data(self, removed_edge=None, removed_edge_dist=None, cache_result=False):
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
         all_shortest_paths_lengths = nx.shortest_path_length(self.G, weight="distance")
         num_missed_trips, changed_trips_distance, num_conserved_trips = 0, 0, 0
@@ -187,8 +187,9 @@ class metro_graph():
                         if edge == removed_edge:
                             continue
                         self._helper_for_adjusting_flow(edge, negated_flow)
-                    
-                    self.previous_path_for_journeys[journey] = shortest_path
+                    if cache_result:
+                        self.previous_path_for_journeys[journey] = shortest_path
+                        self.previous_path_lengths_for_journeys[journey] = shortest_path_length
                     
             except Exception as e:
                 # For all the currently infeasible trips
