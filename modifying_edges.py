@@ -23,11 +23,12 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
     unmodified_metro_score = graph_measure(
         graph, "metro_performance", missed_trips=0, removed_edge_dist=0
     )
+    print("Finished initialization...", str(time.time() - overall_start_time), "sec")
     
-    removal_effects_alpha_0, removal_effects_alpha_1 = [], [], []
+    removal_effects_alpha_0, removal_effects_alpha_1 = [], []
     removal_effects, centralities, edges_in_order = [], [], []
-    missed_trips, flows, distances, changed_trips = [], [], [] 
-    changed_trips_distance, conserved_trips = [], [], []
+    missed_trips, flows, distances, changed_trips = [], [], [], [] 
+    changed_trips_distance, conserved_trips = [], []
     
     i = 0
     start_time = time.time()
@@ -67,14 +68,14 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         
         # Add some logging so that we don't lose hope
         i += 1
-        if i == 150:
-            break
-        if i % 1 == 0:
+        # if i == 150:
+        #     break
+        if i % 25 == 0:
             end_time = time.time() 
             print(
                 "{0:4}".format(i), ": {0:5.2f}".format(end_time - start_time), "sec", 
                 "  {0:7}".format("{0:,}".format(missed)), "missed", 
-                "  {0:10}".format("{0:.2f}".format(changed_dist)), "changed_dist", 
+                "  {0:10}".format("{0:.2f}".format(changed_dist[1])), "changed_dist", 
                 "  {0:7}".format("{0:,}".format(conserved)), "conserved"
             )
             start_time = time.time()
@@ -124,9 +125,13 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
                 file_name=plot_options[title_key]["file_name"] + this_x_axis_data + ".png"
             )
     
+    # removal_effects_alpha_0, removal_effects_alpha_1 = [], []
+    # removal_effects, centralities, edges_in_order = [], [], []
+    # missed_trips, flows, distances, changed_trips = [], [], [], [] 
+    # changed_trips_distance, conserved_trips = [], []
+    
     make_plot(
-        x=centralities, 
-        y=missed_trips, type_of_plot="scatter",
+        x=centralities, y=missed_trips, type_of_plot="scatter",
         ylabel="# of Trips That Became Infeasible", 
         xlabel="Centrality of Removed Edge",
         title="Effect of the Centrality on the # of Infeasible Trips",
@@ -134,12 +139,19 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
     )
     
     make_plot(
-        x=centralities, 
-        y=changed_trips_distance, type_of_plot="scatter",
+        x=centralities, y=changed_trips_distance, type_of_plot="scatter",
         ylabel="Change in Total Distance Travelled (km)", 
         xlabel="Centrality of Removed Edge",
-        title="Effect of the Centrality on the Distance Travelled",
+        title=r"Effect of the Centrality on the $\Delta$ Distance Travelled",
         file_name="changed_trips_against_centrality.png"
+    )
+    
+    make_plot(
+        x=missed_trips, y=changed_trips, type_of_plot="scatter",
+        ylabel="# of Trips That Changed Their Path", 
+        xlabel="# of Missed Trips After Edge Removal",
+        title="Investigating Alternate Paths on the Metro",
+        file_name="investigating_alternate_paths_on_metro.png"
     )
     
     # helper_make_plots(y=removal_effects, title_key="metro_performance")

@@ -165,7 +165,9 @@ class metro_graph():
         all_shortest_paths_lengths = nx.shortest_path_length(self.G, weight="distance")
         
         # Investigate how the changed paths have affected the flow
-        num_missed_trips, changed_trips_distance, num_conserved_trips, num_changed_trips = 0, 0, 0, 0
+        num_missed_trips, changed_trips_distance = 0, 0
+        num_conserved_trips, num_changed_trips = 0, 0
+        
         for journey in self.journeys:
             flow = self.journeys[journey]
             try:
@@ -205,10 +207,9 @@ class metro_graph():
                         
                     # Note how much the distance has changed for this journey 
                     num_changed_trips += flow
-                    changed_trips_distance += previous_shortest_path_length * flow
+                    changed_trips_distance += shortest_path_length * flow
                     
             except Exception as e:
-                # For all the currently infeasible trips
                 num_missed_trips += flow
         
         # Add a sanity check
