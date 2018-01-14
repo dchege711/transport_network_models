@@ -43,7 +43,7 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
         missed, changed_dist, conserved = graph.fill_flows_from_mapped_data(
-            removed_edge=edge, removed_edge_dist=distance
+            removed_edge=edge, removed_edge_dist=distance, redistribute_flow=False
         )
         missed_trips.append(missed)
         changed_trips.append(changed_dist[0])
@@ -142,7 +142,7 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         file_name="changed_trips_against_centrality.png"
     )
     
-    helper_make_plots(y=removal_effects, title_key="metro_performance")
+    # helper_make_plots(y=removal_effects, title_key="metro_performance")
     # helper_make_plots(y=removal_effects_alpha_0, title_key="activity_and_popularity_0")
     # helper_make_plots(y=removal_effects_alpha_1, title_key="activity_and_popularity_1")
     

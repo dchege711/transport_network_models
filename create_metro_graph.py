@@ -156,8 +156,9 @@ class metro_graph():
         if edge_attribute == "flow":
             for edge in self.edges():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
-                
-    def fill_flows_from_mapped_data(self, removed_edge=None, removed_edge_dist=None, cache_result=False):
+    
+    def fill_flows_from_mapped_data(self, removed_edge=None, removed_edge_dist=None, 
+        cache_result=False, redistribute_flow=True):
         # The removed edge may have caused the shortest paths to change
         # The change is measured against the initial complete graph with all edges
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
@@ -179,19 +180,23 @@ class metro_graph():
                 
                 else:
                     # The journey has a new path... 
-                    # ... add the flow in this journey to the new shortest path
-                    for i in range(len(shortest_path) - 1):
-                        edge = (shortest_path[i], shortest_path[i+1])
-                        self._helper_for_adjusting_flow(edge, flow)
-                        
-                    # ... subtract the flow of this journey from its previous shortest path
                     previous_shortest_path = self.previous_path_for_journeys[journey]
-                    negated_flow = flow * -1
-                    for i in range(len(previous_shortest_path) - 1):
-                        edge = (previous_shortest_path[i], previous_shortest_path[i+1])
-                        if edge == removed_edge:
-                            continue
-                        self._helper_for_adjusting_flow(edge, negated_flow)
+                    previous_shortest_path_length = self.previous_path_lengths_for_journeys[journey]
+                    
+                    # If we wish to later analyze individual flows in the network...
+                    if redistribute_flow:
+                        # ... add the flow in this journey to the new shortest path
+                        for i in range(len(shortest_path) - 1):
+                            edge = (shortest_path[i], shortest_path[i+1])
+                            self._helper_for_adjusting_flow(edge, flow)
+                            
+                        # ... subtract the flow of this journey from its previous shortest path
+                        negated_flow = flow * -1
+                        for i in range(len(previous_shortest_path) - 1):
+                            edge = (previous_shortest_path[i], previous_shortest_path[i+1])
+                            if edge == removed_edge:
+                                continue
+                            self._helper_for_adjusting_flow(edge, negated_flow)
                         
                     # If we wish to store these as the default values, then do so
                     if cache_result:
@@ -199,7 +204,6 @@ class metro_graph():
                         self.previous_path_lengths_for_journeys[journey] = shortest_path_length
                         
                     # Note how much the distance has changed for this journey 
-                    previous_shortest_path_length = self.previous_path_lengths_for_journeys[journey]
                     num_changed_trips += flow
                     changed_trips_distance += previous_shortest_path_length * flow
                     
