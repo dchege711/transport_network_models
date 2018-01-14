@@ -44,7 +44,7 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
         missed, changed_dist, conserved = graph.fill_flows_from_mapped_data(
-            removed_edge=edge, removed_edge_dist=distance, redistribute_flow=False
+            removed_edge=edge, removed_edge_dist=distance, redistribute_flow=True
         )
         missed_trips.append(missed)
         changed_trips.append(changed_dist[0])
@@ -125,38 +125,33 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
                 file_name=plot_options[title_key]["file_name"] + this_x_axis_data + ".png"
             )
     
-    # removal_effects_alpha_0, removal_effects_alpha_1 = [], []
-    # removal_effects, centralities, edges_in_order = [], [], []
-    # missed_trips, flows, distances, changed_trips = [], [], [], [] 
-    # changed_trips_distance, conserved_trips = [], []
+    # make_plot(
+    #     x=centralities, y=missed_trips, type_of_plot="scatter",
+    #     ylabel="# of Trips That Became Infeasible", 
+    #     xlabel="Centrality of Removed Edge",
+    #     title="Effect of the Centrality on the # of Infeasible Trips",
+    #     file_name="infeasible_trips_against_centrality.png"
+    # )
+    # 
+    # make_plot(
+    #     x=centralities, y=changed_trips_distance, type_of_plot="scatter",
+    #     ylabel="Change in Total Distance Travelled (km)", 
+    #     xlabel="Centrality of Removed Edge",
+    #     title=r"Effect of the Centrality on the $\Delta$ Distance Travelled",
+    #     file_name="changed_trips_against_centrality.png"
+    # )
+    # 
+    # make_plot(
+    #     x=missed_trips, y=changed_trips, type_of_plot="scatter",
+    #     ylabel="# of Trips That Changed Their Path", 
+    #     xlabel="# of Missed Trips After Edge Removal",
+    #     title="Investigating Alternate Paths on the Metro",
+    #     file_name="investigating_alternate_paths_on_metro.png"
+    # )
     
-    make_plot(
-        x=centralities, y=missed_trips, type_of_plot="scatter",
-        ylabel="# of Trips That Became Infeasible", 
-        xlabel="Centrality of Removed Edge",
-        title="Effect of the Centrality on the # of Infeasible Trips",
-        file_name="infeasible_trips_against_centrality.png"
-    )
-    
-    make_plot(
-        x=centralities, y=changed_trips_distance, type_of_plot="scatter",
-        ylabel="Change in Total Distance Travelled (km)", 
-        xlabel="Centrality of Removed Edge",
-        title=r"Effect of the Centrality on the $\Delta$ Distance Travelled",
-        file_name="changed_trips_against_centrality.png"
-    )
-    
-    make_plot(
-        x=missed_trips, y=changed_trips, type_of_plot="scatter",
-        ylabel="# of Trips That Changed Their Path", 
-        xlabel="# of Missed Trips After Edge Removal",
-        title="Investigating Alternate Paths on the Metro",
-        file_name="investigating_alternate_paths_on_metro.png"
-    )
-    
-    # helper_make_plots(y=removal_effects, title_key="metro_performance")
-    # helper_make_plots(y=removal_effects_alpha_0, title_key="activity_and_popularity_0")
-    # helper_make_plots(y=removal_effects_alpha_1, title_key="activity_and_popularity_1")
+    helper_make_plots(y=removal_effects, title_key="metro_performance")
+    helper_make_plots(y=removal_effects_alpha_0, title_key="activity_and_popularity_0")
+    helper_make_plots(y=removal_effects_alpha_1, title_key="activity_and_popularity_1")
     
     indexes_in_sorted_list = np.argsort(removal_effects)
         
