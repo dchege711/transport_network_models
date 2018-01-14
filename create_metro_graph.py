@@ -67,12 +67,14 @@ class metro_graph():
         # Cache the routes followed by each journey since fill_flows_from_mapped_data()
         # has poor performance (~50 seconds per run)
         self.previous_path_for_journeys = {}
+        self.previous_path_lengths_for_journeys = {}
         for journey in self.journeys:
             self.previous_path_for_journeys[journey] = []
+            self.previous_path_lengths_for_journeys[journey] = []
         
         # Set the default values for the edges
         for edge in self.edges():
-            self.add_attribute_to_edge(edge=edge, capacity=50000, flow=0)
+            self.add_attribute_to_edge(edge=edge, capacity=80000, flow=0)
         
         self.fill_flows_from_mapped_data()
     
@@ -153,14 +155,16 @@ class metro_graph():
             for edge in self.edges():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
                 
-    def fill_flows_from_mapped_data(self, removed_edge=None):
+    def fill_flows_from_mapped_data(self, removed_edge=None, removed_edge_dist=None):
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
-        num_missed_trips, num_changed_trips, num_conserved_trips = 0, 0, 0
+        all_shortest_paths_lengths = nx.shortest_path_length(self.G, weight="distance")
+        num_missed_trips, changed_trips_distance, num_conserved_trips = 0, 0, 0
         for journey in self.journeys:
             flow = self.journeys[journey]
             try:
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
-
+                shortest_path_length = all_shortest_paths_lengths[journey[0]][journey[1]]
+                
                 if shortest_path == self.previous_path_for_journeys[journey]:
                     # If the trips haven't been affected by the change, do nothing
                     num_conserved_trips += flow
@@ -175,6 +179,7 @@ class metro_graph():
                         
                     # Avoid double counting the trips
                     previous_shortest_path = self.previous_path_for_journeys[journey]
+                    previous_shortest_path_length = self.previous_path_lengths_for_journeys[journey]
                     hops = len(previous_shortest_path) - 1
                     negated_flow = flow * -1
                     for i in range(hops):
@@ -184,12 +189,12 @@ class metro_graph():
                         self._helper_for_adjusting_flow(edge, negated_flow)
                     
                     self.previous_path_for_journeys[journey] = shortest_path
-                    num_changed_trips += flow
                     
             except Exception as e:
+                # For all the currently infeasible trips
                 num_missed_trips += flow
   
-        return num_missed_trips, num_changed_trips, num_conserved_trips
+        return num_missed_trips, changed_trips_distance, num_conserved_trips
     
     def _helper_for_adjusting_flow(self, edge, delta_flow):
         temp = self.get_edge_attribute(
@@ -251,7 +256,7 @@ class metro_graph():
         inward_edges = self.edges(nodes=node, incoming=True)
         return self._sum_weights_to_power_alpha(alpha, inward_edges, edge_attribute)
     
-    def metro_network_performance(self, cost_per_unit_distance=10, utility_over_cost=2):
+    def metro_network_performance(self, cost_per_unit_distance=10, utility_over_cost=2, missed_trips=0):
         """
         Rationale:
         1. Reward people getting to destinations through shorter routes 
@@ -274,8 +279,9 @@ class metro_graph():
             
             utility = (flow * distance) * utility_over_cost
             cost = (distance * cost_per_unit_distance + inefficiency) / utility_over_cost
-            running_sum += utility - cost 
-        return running_sum
+            running_sum += utility - cost
+            
+        return running_sum - (missed_trips * utility_over_cost)
             
     
 def main():
