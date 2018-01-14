@@ -132,6 +132,7 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
     
     print_stats(indexes_in_sorted_list[-2:])
     print_stats(indexes_in_sorted_list[:2])
+    
     print( 
         "\nMaximum flow on an edge was", "{0:,}".format(np.max(flows)), "passengers", 
         "\nMax centrality on an edge was", "{0:.4f}".format(np.max(centralities)),
@@ -164,7 +165,6 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None,
     
     if "legend" in kwargs:
         plt.legend(kwargs["legend"], loc="best")
-        
     
     if file_name is not None:
         plt.savefig("images/"+file_name, format="png")
