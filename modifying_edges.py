@@ -22,6 +22,7 @@ def delete_one_edge_and_evaluate(graph, test_type="metro_performance",
     removal_effects, centralities, edges_in_order = [], [], []
     missed_trips, flows, distances = [], [], []
     i = 0
+    overall_start_time = time.time()
     start_time = time.time()
     for edge in edge_centralities:
         # Get an in-order record of the edges and their flows
@@ -33,24 +34,29 @@ def delete_one_edge_and_evaluate(graph, test_type="metro_performance",
         distances.append(distance)
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
-        missed, changed, conserved = graph.fill_flows_from_mapped_data()
+        missed, changed, conserved = graph.fill_flows_from_mapped_data(removed_edge=edge)
         missed_trips.append(missed)
         measure = graph_measure(graph, test_type, alpha=alpha)
         effect = ((measure - unmodified_graph_score)/unmodified_graph_score)*100.0
         removal_effects.append(effect)
         # Experiment part 2: Re-insert the edge so that results are comparable
         centralities.append(edge_centralities[edge])
-        graph.add_edge(edge=edge, flow=flow, capacity=capacity, distance=distance)
+        graph.add_edge(edge=edge, flow=0, capacity=capacity, distance=distance)
         
         # Add some logging so that we don't lose hope
         i += 1
         if i % 1 == 0:
             end_time = time.time() 
             print(
-                i, "{0:.2f}".format(end_time - start_time), "sec", 
-                missed, "missed", changed, "changed", conserved, "conserved"
+                "{0:4}".format(i), ": {0:5.2f}".format(end_time - start_time), "sec", 
+                "  {0:7}".format("{0:,}".format(missed)), "missed", 
+                "  {0:7}".format("{0:,}".format(changed)), "changed", 
+                "  {0:7}".format("{0:,}".format(conserved)), "conserved"
             )
             start_time = time.time()
+            
+    end_time = time.time()
+    print("\nSimulation took", "{0:5.2f}".format(end_time - overall_start_time), "seconds\n")
         
     plot_options = {
         "flows" : {
@@ -130,9 +136,10 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot
     else:
         raise ValueError("Please provide a valid type of plot")
     
-    plt.show()
     if file_name is not None:
         plt.savefig("images/"+file_name, format="png")
+        
+    plt.show()
     
 def main():
     graph = metro_graph()

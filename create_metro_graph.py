@@ -153,17 +153,17 @@ class metro_graph():
             for edge in self.edges():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
                 
-    def fill_flows_from_mapped_data(self):
+    def fill_flows_from_mapped_data(self, removed_edge=None):
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
         num_missed_trips, num_changed_trips, num_conserved_trips = 0, 0, 0
         for journey in self.journeys:
+            flow = self.journeys[journey]
             try:
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
-                flow = self.journeys[journey]
-                
+
                 if shortest_path == self.previous_path_for_journeys[journey]:
                     # If the trips haven't been affected by the change, do nothing
-                    num_conserved_trips += 1
+                    num_conserved_trips += flow
                     continue
                 
                 else:
@@ -176,16 +176,18 @@ class metro_graph():
                     # Avoid double counting the trips
                     previous_shortest_path = self.previous_path_for_journeys[journey]
                     hops = len(previous_shortest_path) - 1
-                    flow = flow * -1
+                    negated_flow = flow * -1
                     for i in range(hops):
                         edge = (previous_shortest_path[i], previous_shortest_path[i+1])
-                        self._helper_for_adjusting_flow(edge, flow)
+                        if edge == removed_edge:
+                            continue
+                        self._helper_for_adjusting_flow(edge, negated_flow)
                     
                     self.previous_path_for_journeys[journey] = shortest_path
-                    num_changed_trips += 1
+                    num_changed_trips += flow
                     
             except Exception as e:
-                num_missed_trips += self.journeys[journey]
+                num_missed_trips += flow
   
         return num_missed_trips, num_changed_trips, num_conserved_trips
     
