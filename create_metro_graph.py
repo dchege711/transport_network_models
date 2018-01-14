@@ -76,7 +76,7 @@ class metro_graph():
         for edge in self.edges():
             self.add_attribute_to_edge(edge=edge, capacity=80000, flow=0)
         
-        self.fill_flows_from_mapped_data(cache_result=True)
+        self.fill_flows_from_mapped_data(cache_result=True) 
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
