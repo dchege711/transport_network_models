@@ -76,8 +76,9 @@ class metro_graph():
         for edge in self.edges():
             self.add_attribute_to_edge(edge=edge, capacity=80000, flow=0)
         
+        self.num_total_trips = 0
         results = self.fill_flows_from_mapped_data(cache_result=True) 
-        assert (results[0] == 0) "All trips should be accessible during initialization."
+        assert results[0] == 0, "Expected 0 missed trips. Received {0}".format(results[0])
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
@@ -163,7 +164,7 @@ class metro_graph():
         all_shortest_paths_lengths = nx.shortest_path_length(self.G, weight="distance")
         
         # Investigate how the changed paths have affected the flow
-        num_missed_trips, changed_trips_distance, num_conserved_trips = 0, 0, 0
+        num_missed_trips, changed_trips_distance, num_conserved_trips, num_changed_trips = 0, 0, 0, 0
         for journey in self.journeys:
             flow = self.journeys[journey]
             try:
@@ -199,13 +200,22 @@ class metro_graph():
                         
                     # Note how much the distance has changed for this journey 
                     previous_shortest_path_length = self.previous_path_lengths_for_journeys[journey]
+                    num_changed_trips += flow
                     changed_trips_distance += previous_shortest_path_length * flow
                     
             except Exception as e:
                 # For all the currently infeasible trips
                 num_missed_trips += flow
-  
-        return num_missed_trips, changed_trips_distance, num_conserved_trips
+        
+        # Add a sanity check
+        total_trips = num_missed_trips + num_changed_trips + num_conserved_trips
+        if cache_result:
+            self.num_total_trips = total_trips
+        else:
+            error_msg = "Expected {0} trips. Got {1} trips".format(self.num_total_trips, total_trips)
+            assert self.num_total_trips == total_trips, error_msg
+        
+        return num_missed_trips, (num_changed_trips, changed_trips_distance), num_conserved_trips
     
     def _helper_for_adjusting_flow(self, edge, delta_flow):
         temp = self.get_edge_attribute(

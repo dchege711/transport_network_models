@@ -20,10 +20,14 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
     edge_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
     unmodified_alpha_0_score = graph_measure(graph, "activity_and_popularity", alpha=0)
     unmodified_alpha_1_score = graph_measure(graph, "activity_and_popularity", alpha=1)
-    unmodified_metro_score = graph_measure(graph, "metro_performance", missed_trips=0, removed_edge_dist=0)
+    unmodified_metro_score = graph_measure(
+        graph, "metro_performance", missed_trips=0, removed_edge_dist=0
+    )
     
-    removal_effects_alpha_0, removal_effects_alpha_1, removal_effects, centralities = [], [], [], []
-    edges_in_order, missed_trips, flows, distances, changed_trips_distance, conserved_trips = [], [], [], [], [], []
+    removal_effects_alpha_0, removal_effects_alpha_1 = [], [], []
+    removal_effects, centralities, edges_in_order = [], [], []
+    missed_trips, flows, distances, changed_trips = [], [], [] 
+    changed_trips_distance, conserved_trips = [], [], []
     
     i = 0
     start_time = time.time()
@@ -42,7 +46,8 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
             removed_edge=edge, removed_edge_dist=distance
         )
         missed_trips.append(missed)
-        changed_trips_distance.append(changed_dist)
+        changed_trips.append(changed_dist[0])
+        changed_trips_distance.append(changed_dist[1])
         conserved_trips.append(conserved)
         
         # Run all the experiments back to back because it's faster that way
@@ -123,7 +128,7 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         x=centralities, 
         y=missed_trips, type_of_plot="scatter",
         ylabel="# of Trips That Became Infeasible", 
-        xlabel="Centrality of Removed Node",
+        xlabel="Centrality of Removed Edge",
         title="Effect of the Centrality on the # of Infeasible Trips",
         file_name="infeasible_trips_against_centrality.png"
     )
@@ -132,12 +137,12 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         x=centralities, 
         y=changed_trips_distance, type_of_plot="scatter",
         ylabel="Change in Total Distance Travelled (km)", 
-        xlabel="Centrality of Removed Node",
+        xlabel="Centrality of Removed Edge",
         title="Effect of the Centrality on the Distance Travelled",
         file_name="changed_trips_against_centrality.png"
     )
     
-    # helper_make_plots(y=removal_effects, title_key="metro_performance")
+    helper_make_plots(y=removal_effects, title_key="metro_performance")
     # helper_make_plots(y=removal_effects_alpha_0, title_key="activity_and_popularity_0")
     # helper_make_plots(y=removal_effects_alpha_1, title_key="activity_and_popularity_1")
     
