@@ -155,40 +155,49 @@ class metro_graph():
                 
     def fill_flows_from_mapped_data(self):
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
-        
-        # Reset the flows...
-        for edge in self.edges():
-            self.add_attribute_to_edge(edge=edge, flow=0)
-            
-        num_missed_trips = 0
+        num_missed_trips, num_changed_trips, num_conserved_trips = 0, 0, 0
         for journey in self.journeys:
             try:
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
+                flow = self.journeys[journey]
+                
                 if shortest_path == self.previous_path_for_journeys[journey]:
-                    cached += 1
+                    # If the trips haven't been affected by the change, do nothing
+                    num_conserved_trips += 1
                     continue
                 
                 else:
+                    # If the trips have been affected by the change, transfer them
                     hops = len(shortest_path) - 1
                     for i in range(hops):
                         edge = (shortest_path[i], shortest_path[i+1])
-                        temp = self.get_edge_attribute(
-                            edge=edge, 
-                            attribute_name="flow"
-                        )
-                        self.add_attribute_to_edge(
-                            edge=edge,
-                            flow=temp + self.journeys[journey]
-                        )
+                        self._helper_for_adjusting_flow(edge, flow)
+                        
+                    # Avoid double counting the trips
+                    previous_shortest_path = self.previous_path_for_journeys[journey]
+                    hops = len(previous_shortest_path) - 1
+                    flow = flow * -1
+                    for i in range(hops):
+                        edge = (previous_shortest_path[i], previous_shortest_path[i+1])
+                        self._helper_for_adjusting_flow(edge, flow)
+                    
                     self.previous_path_for_journeys[journey] = shortest_path
+                    num_changed_trips += 1
                     
             except Exception as e:
-                try:
-                    shortest_path = all_shortest_paths[journey[0]][journey[1]]
-                except:
-                    num_missed_trips += self.journeys[journey]
+                num_missed_trips += self.journeys[journey]
   
-        return num_missed_trips
+        return num_missed_trips, num_changed_trips, num_conserved_trips
+    
+    def _helper_for_adjusting_flow(self, edge, delta_flow):
+        temp = self.get_edge_attribute(
+            edge=edge, 
+            attribute_name="flow"
+        )
+        self.add_attribute_to_edge(
+            edge=edge,
+            flow=temp + delta_flow
+        )
         
     def add_attribute_to_edge(self, edge=None, source_node=None, target_node=None, **kwargs):
         relevant_edge = self._get_relevant_edge(edge, source_node, target_node)

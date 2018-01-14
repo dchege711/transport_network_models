@@ -33,8 +33,8 @@ def delete_one_edge_and_evaluate(graph, test_type="metro_performance",
         distances.append(distance)
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
-        num_missed_trips = graph.fill_flows_from_mapped_data()
-        missed_trips.append(num_missed_trips)
+        missed, changed, conserved = graph.fill_flows_from_mapped_data()
+        missed_trips.append(missed)
         measure = graph_measure(graph, test_type, alpha=alpha)
         effect = ((measure - unmodified_graph_score)/unmodified_graph_score)*100.0
         removal_effects.append(effect)
@@ -44,9 +44,12 @@ def delete_one_edge_and_evaluate(graph, test_type="metro_performance",
         
         # Add some logging so that we don't lose hope
         i += 1
-        if i % 100 == 0:
+        if i % 1 == 0:
             end_time = time.time() 
-            print("Iteration:", i, "duration:", str(end_time - start_time), "seconds")
+            print(
+                i, "{0:.2f}".format(end_time - start_time), "sec", 
+                missed, "missed", changed, "changed", conserved, "conserved"
+            )
             start_time = time.time()
         
     plot_options = {
@@ -59,7 +62,7 @@ def delete_one_edge_and_evaluate(graph, test_type="metro_performance",
             "xlabel": "Betweenness Centrality of the Removed Edge"
         },
         "num_missed_trips" : {
-            "x_on_the_plot": num_missed_trips,
+            "x_on_the_plot": missed_trips,
             "xlabel": "# of Missed Trips Caused by Missing Edge"
         },
         "distances" : {
@@ -133,14 +136,14 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot
     
 def main():
     graph = metro_graph()
-    # delete_one_edge_and_evaluate(
-    #     graph, test_type="activity_and_popularity", alpha=1,
-    #     x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
-    # )
     delete_one_edge_and_evaluate(
-        graph, test_type="metro_performance",
+        graph, test_type="activity_and_popularity", alpha=0,
         x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
     )
+    # delete_one_edge_and_evaluate(
+    #     graph, test_type="metro_performance",
+    #     x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
+    # )
     
 
 if __name__ == "__main__":
