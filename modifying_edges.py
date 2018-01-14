@@ -13,21 +13,17 @@ import numpy as np
 import time
 
 def delete_one_edge_and_evaluate(graph, test_type="metro_performance", 
-    x_axis_data="flows", alpha=2):
+    x_axis_data=["flows"], alpha=2):
 
     graph = deepcopy(graph)
     edge_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
     unmodified_graph_score = graph_measure(graph, test_type, alpha=alpha)
     
-    removal_effects = []
-    centralities = []
-    edges_in_order = []
-    flows = []
-    distances = []
-    i = 1
-    
+    removal_effects, centralities, edges_in_order = [], [], []
+    missed_trips, flows, distances = [], [], []
+    i = 0
+    start_time = time.time()
     for edge in edge_centralities:
-        start_time = time.time()
         # Get an in-order record of the edges and their flows
         edges_in_order.append(edge)
         flow = graph.get_edge_attribute(edge=edge, attribute_name="flow")
@@ -37,17 +33,21 @@ def delete_one_edge_and_evaluate(graph, test_type="metro_performance",
         distances.append(distance)
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
-        graph.fill_flows_from_mapped_data()
+        num_missed_trips = graph.fill_flows_from_mapped_data()
+        missed_trips.append(num_missed_trips)
         measure = graph_measure(graph, test_type, alpha=alpha)
         effect = ((measure - unmodified_graph_score)/unmodified_graph_score)*100.0
         removal_effects.append(effect)
         # Experiment part 2: Re-insert the edge so that results are comparable
         centralities.append(edge_centralities[edge])
         graph.add_edge(edge=edge, flow=flow, capacity=capacity, distance=distance)
-        end_time = time.time()
-        print("Iteration:", i, "duration:", str(end_time - start_time), "seconds\n")
+        
+        # Add some logging so that we don't lose hope
         i += 1
-        if i == 10: break
+        if i % 100 == 0:
+            end_time = time.time() 
+            print("Iteration:", i, "duration:", str(end_time - start_time), "seconds")
+            start_time = time.time()
         
     plot_options = {
         "flows" : {
@@ -58,28 +58,33 @@ def delete_one_edge_and_evaluate(graph, test_type="metro_performance",
             "x_on_the_plot": centralities,
             "xlabel": "Betweenness Centrality of the Removed Edge"
         },
+        "num_missed_trips" : {
+            "x_on_the_plot": num_missed_trips,
+            "xlabel": "# of Missed Trips Caused by Missing Edge"
+        },
         "distances" : {
             "x_on_the_plot": distances,
-            "xlabel": "Length of the Removed Edge"
+            "xlabel": "Length of the Removed Edge (km)"
         },
         "metro_performance": {
             "title": "Percentage Effect of Removing a Link",
-            "file_name": "metro_performance.png"
+            "file_name": "metro_performance_"
         },
         "activity_and_popularity": {
             "title": r"Percentage Effect of Removing a Link ($\alpha$ = " + str(alpha) + " )",
-            "file_name": "flow_alpha_" + str(alpha) + ".png"
+            "file_name": "activity_and_popularity_alpha_" + str(alpha) + "_"
         }
     }
     
-    make_plot(
-        x=plot_options[x_axis_data]["x_on_the_plot"], 
-        y=removal_effects, type_of_plot="scatter",
-        ylabel="Percentage Change in Graph Performance", 
-        xlabel=plot_options[x_axis_data]["xlabel"],
-        title=plot_options[test_type]["title"],
-        file_name=plot_options[test_type]["file_name"]
-    )
+    for this_x_axis_data in x_axis_data:
+        make_plot(
+            x=plot_options[this_x_axis_data]["x_on_the_plot"], 
+            y=removal_effects, type_of_plot="scatter",
+            ylabel="Percentage Change in Graph Performance", 
+            xlabel=plot_options[this_x_axis_data]["xlabel"],
+            title=plot_options[test_type]["title"],
+            file_name=plot_options[test_type]["file_name"] + this_x_axis_data + ".png"
+        )
     
     indexes_in_sorted_list = np.argsort(removal_effects)
         
@@ -122,15 +127,21 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, type_of_plot
     else:
         raise ValueError("Please provide a valid type of plot")
     
+    plt.show()
     if file_name is not None:
         plt.savefig("images/"+file_name, format="png")
-    plt.show()
     
 def main():
-    
     graph = metro_graph()
-    # graph.randomize_all_flows(1000)
-    delete_one_edge_and_evaluate(graph)
+    # delete_one_edge_and_evaluate(
+    #     graph, test_type="activity_and_popularity", alpha=1,
+    #     x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
+    # )
+    delete_one_edge_and_evaluate(
+        graph, test_type="metro_performance",
+        x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
+    )
+    
 
 if __name__ == "__main__":
     main()

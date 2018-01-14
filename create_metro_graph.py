@@ -154,13 +154,13 @@ class metro_graph():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
                 
     def fill_flows_from_mapped_data(self):
-        print("Looking for shortest paths...")
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
-        print("Fitting the journeys...")
-        start_time = time.time()
-        missed_path = {}
-        cached = 0
         
+        # Reset the flows...
+        for edge in self.edges():
+            self.add_attribute_to_edge(edge=edge, flow=0)
+            
+        num_missed_trips = 0
         for journey in self.journeys:
             try:
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
@@ -186,14 +186,9 @@ class metro_graph():
                 try:
                     shortest_path = all_shortest_paths[journey[0]][journey[1]]
                 except:
-                    if journey not in missed_path:
-                        missed_path[journey] = 0
-                    missed_path[journey] += 1
+                    num_missed_trips += self.journeys[journey]
   
-        end_time = time.time()
-        print("Retrieved", cached, "results from cache", len(missed_path), "missed journeys...")
-        # print(self.get_edge_attribute(edge=('95th/Dan Ryan (Red Line)', '87th (Red Line)'), attribute_name="flow"))
-        print("Completed path matching...", str(end_time - start_time))
+        return num_missed_trips
         
     def add_attribute_to_edge(self, edge=None, source_node=None, target_node=None, **kwargs):
         relevant_edge = self._get_relevant_edge(edge, source_node, target_node)
@@ -267,7 +262,6 @@ class metro_graph():
                     inefficiency = inefficiency * 2
             
             running_sum += flow * distance - distance * cost_per_unit_distance - inefficiency
-        print("Completed metro_network_performance()...")
         return running_sum
             
     
