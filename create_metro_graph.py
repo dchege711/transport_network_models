@@ -79,12 +79,14 @@ class metro_graph():
         self.num_total_trips = 0
         results = self.fill_flows_from_mapped_data(cache_result=True) 
         assert results[0] == 0, "Expected 0 missed trips. Received {0}".format(results[0])
+        
+        self.store_as_pickle()
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
     
     def store_as_pickle(self):
-        output_file = open("metro_graph.pkl",'wb')
+        output_file = open("metro_graph_with_flows.pkl",'wb')
         pickle.dump(self.G, output_file)
         output_file.close()
     
@@ -308,7 +310,12 @@ class metro_graph():
             running_sum += utility - cost
             
         return running_sum - (missed_trips * utility_over_cost)
-            
+    
+    def get_flow_dict(self):
+        flow_dict = {}
+        for edge in self.edges():
+            flow_dict[edge] = self.get_edge_attribute(edge=edge, attribute_name="flow")
+        return flow_dict
     
 def main():
 
