@@ -44,7 +44,7 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
         missed, changed_dist, conserved = graph.fill_flows_from_mapped_data(
-            removed_edge=edge, removed_edge_dist=distance, redistribute_flow=True
+            removed_edge=edge, removed_edge_dist=distance, redistribute_flow=False
         )
         missed_trips.append(missed)
         changed_trips.append(changed_dist[0])
@@ -109,12 +109,12 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         },
         "activity_and_popularity_0": {
             "title": r"Effect of Removing a Link, $\alpha$ = " + str(0) + " (emphasizes degree over flow)",
-            "file_name": "activity_and_popularity_alpha_" + str(0) + "_",
+            "file_name": "no_redistribution_activity_and_popularity_alpha_" + str(0) + "_",
             "y_on_the_plot": removal_effects_alpha_0
         },
         "activity_and_popularity_1": {
-            "title": r"Effect of Removing a Link, $\alpha$ = " + str(1) + " (emphasizes flow over degree)",
-            "file_name": "activity_and_popularity_alpha_" + str(1) + "_",
+            "title": r"Effect of Removing a Link, $\alpha$ = " + str(1) + " (without re-assigning flow)",
+            "file_name": "no_redistribution_activity_and_popularity_alpha_" + str(1) + "_",
             "y_on_the_plot": removal_effects_alpha_1
         }
     }
@@ -156,8 +156,8 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
     #     file_name="investigating_alternate_paths_on_metro.png"
     # )
     
-    helper_make_plots(y=removal_effects, title_key="metro_performance")
-    helper_make_plots(y=removal_effects_alpha_0, title_key="activity_and_popularity_0")
+    # helper_make_plots(y=removal_effects, title_key="metro_performance")
+    # helper_make_plots(y=removal_effects_alpha_0, title_key="activity_and_popularity_0")
     helper_make_plots(y=removal_effects_alpha_1, title_key="activity_and_popularity_1")
     
     indexes_in_sorted_list = np.argsort(removal_effects)

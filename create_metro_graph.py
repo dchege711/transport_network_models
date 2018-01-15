@@ -80,7 +80,7 @@ class metro_graph():
         results = self.fill_flows_from_mapped_data(cache_result=True) 
         assert results[0] == 0, "Expected 0 missed trips. Received {0}".format(results[0])
         
-        self.store_as_pickle()
+        # self.store_as_pickle()
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
