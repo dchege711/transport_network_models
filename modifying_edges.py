@@ -14,6 +14,8 @@ import time
 import heapq
 from random import shuffle, randint, sample
 
+copy_of_original_graph = None
+
 def delete_one_edge_and_evaluate(graph, test_type=None, x_axis_data=None):
     overall_start_time = time.time()
     graph = deepcopy(graph)
@@ -117,6 +119,8 @@ def delete_one_edge_and_evaluate(graph, test_type=None, x_axis_data=None):
 
 def add_new_edge(graph, num_edges_to_consider=15, prune_method=None, test_type=None):
     graph = deepcopy(graph)
+    global copy_of_original_graph 
+    copy_of_original_graph = deepcopy(graph)
     
     # Find all possible edges that can be added to the graph 
     possible_new_edges = []
@@ -147,9 +151,8 @@ def add_new_edge(graph, num_edges_to_consider=15, prune_method=None, test_type=N
     pruned_edges = []
     for score, edge, flow in best_n_edges:
         pruned_edges.append(edge)
-
+    before = pruned_edges[0]
     shuffle(pruned_edges)
-    pruned_edges = sample(possible_new_edges, num_edges_to_consider)
     pruned_edge_results, best_pruned_result, flows = performance_metric_on_addition_of_edge(
         deepcopy(graph), pruned_edges, test_type, unmodified_metro_score
     )
@@ -160,25 +163,40 @@ def add_new_edge(graph, num_edges_to_consider=15, prune_method=None, test_type=N
         ylabel="Percentage Change in Graph Performance", 
         xlabel="Edge Index", legend=["Top Picks After Pruning", "Randomly Picked Edges"],
         title="Comparing Effects on Performance from the Pruned Set of Edges",
-        file_name=prune_method + ".png"
+        file_name=prune_method + "_evaluated_by_" + test_type + ".png"
     )
     print(best_pruned_result)
     
-def performance_metric_on_addition_of_edge(metro_graph_object, edges, test_type, unmodified_metro_score):
+def performance_metric_on_addition_of_edge(metro_graph_object, edges, test_type, 
+    unmodified_metro_score, original_num_edges=298):
+    global copy_of_original_graph
+    original_num_edges = copy_of_original_graph.number_of_edges()
     best_candidate = (float("inf")*-1, None)
     record_of_metrics = []
     flows = []
     for i, edge in enumerate(edges):
+        metro_graph_object = deepcopy(copy_of_original_graph)
         distance = metro_graph_object.distance_between_two_nodes(edge[0], edge[1])
         metro_graph_object.add_edge(edge=edge, flow=0, capacity=80000, distance=distance)
+        current_num_edges = metro_graph_object.number_of_edges()
+        assert current_num_edges == original_num_edges + 1, "Found {0} edges".format(current_num_edges)
         missed, changed_dist, conserved = metro_graph_object.fill_flows_from_mapped_data(
             modified_edge=edge, redistribute_flow=True
         )
+        assert missed == 0, "The metro shouldn't be missing any trip"
         measure = graph_measure(metro_graph_object, test_type, alpha=1, missed_trips=missed)
-        measure = ((measure - unmodified_metro_score) / unmodified_metro_score) * (100.0)
+        if test_type == "shortest_paths":
+            measure_delta = (unmodified_metro_score - measure)
+        else:
+            measure_delta = (measure - unmodified_metro_score)
+        measure = (measure_delta / unmodified_metro_score) * 100.0
         record_of_metrics.append(measure)
         flows.append(metro_graph_object.get_edge_attribute(edge=edge, attribute_name="flow"))
         metro_graph_object.remove_edge(edge=edge)
+        assert metro_graph_object.number_of_edges() == original_num_edges
+        missed, changed_dist, conserved = metro_graph_object.fill_flows_from_mapped_data(
+            modified_edge=edge, redistribute_flow=True, cache_result=True
+        )
         if measure > best_candidate[0]:
             best_candidate = (measure, edge)
         if i % 5 == 0: print("Evaluated candidate", i, "score:", measure)
@@ -247,6 +265,8 @@ def graph_measure(metro_graph_object, test_type, **kwargs):
         return metro_graph_object.graph_popularity(alpha=alpha) + metro_graph_object.graph_activity(alpha=alpha)
     elif test_type == "metro_performance":
         return metro_graph_object.metro_network_performance(utility_over_cost=10, missed_trips=kwargs["missed_trips"])
+    elif test_type == "shortest_paths":
+        return metro_graph_object.total_shortest_paths()
     else:
         raise ValueError("Please provide a valid test.")
     
@@ -309,8 +329,10 @@ def main():
     print("Initializing metro graph...")
     graph = metro_graph()
     print("Done!", str(time.time() - start_time), "sec")
+    # prune_methods: prune_edges_by_score, prune_edges_by_distance_flow_product
+    # test_types: shortest_paths, metro_performance, activity_and_popularity
     add_new_edge(
-        graph, prune_method="prune_edges_by_distance_flow_product",
+        graph, prune_method="prune_edges_by_score",
         test_type="metro_performance"
     )
 

@@ -318,6 +318,16 @@ class metro_graph():
             
         return running_sum - (missed_trips * utility_over_cost)
     
+    def total_shortest_paths(self):
+        all_shortest_paths_lengths = nx.shortest_path_length(self.G, weight="distance")
+        running_sum = 0
+        for journey in self.journeys:
+            try:
+                running_sum += all_shortest_paths_lengths[journey[0]][journey[1]] * self.journeys[journey]
+            except KeyError:
+                return float("inf")
+        return running_sum
+            
     def get_flow_dict(self):
         flow_dict = {}
         for edge in self.edges():
