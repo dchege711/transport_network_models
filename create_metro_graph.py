@@ -99,6 +99,13 @@ class metro_graph():
     def has_node(self, node):
         return self.G.has_node(node)
     
+    def distance_between_two_nodes(self, node_a, node_b):
+        assert self.has_node(node_a), "{0} is not a present in the graph".format(node_a)
+        assert self.has_node(node_b), "{0} is not a present in the graph".format(node_b)
+        station_a = self.get_node_attribute(node_a, attribute_name="station")
+        station_b = self.get_node_attribute(node_b, attribute_name="station")
+        return station_a.distance_to(station_b)
+    
     def number_of_nodes(self):
         return nx.number_of_nodes(self.G)
     
@@ -159,7 +166,7 @@ class metro_graph():
             for edge in self.edges():
                 self.add_attribute_to_edge(edge=edge, flow=random.randint(1, max_n))
     
-    def fill_flows_from_mapped_data(self, removed_edge=None, removed_edge_dist=None, 
+    def fill_flows_from_mapped_data(self, modified_edge=None, modified_edge_dist=None, 
         cache_result=False, redistribute_flow=True):
         # The removed edge may have caused the shortest paths to change
         # The change is measured against the initial complete graph with all edges
@@ -198,7 +205,7 @@ class metro_graph():
                         negated_flow = flow * -1
                         for i in range(len(previous_shortest_path) - 1):
                             edge = (previous_shortest_path[i], previous_shortest_path[i+1])
-                            if edge == removed_edge:
+                            if edge == modified_edge:
                                 continue
                             self._helper_for_adjusting_flow(edge, negated_flow)
                         

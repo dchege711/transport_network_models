@@ -11,17 +11,17 @@ from pprint import pprint
 import networkx as nx
 import numpy as np
 import time
+import heapq
+from random import shuffle, randint, sample
 
-def delete_one_edge_and_evaluate(graph, test_type=None, 
-    x_axis_data=["flows"], alpha=2):
-    
+def delete_one_edge_and_evaluate(graph, test_type=None, x_axis_data=None):
     overall_start_time = time.time()
     graph = deepcopy(graph)
     edge_centralities = nx.edge_betweenness_centrality(graph.G, weight="flow")
     unmodified_alpha_0_score = graph_measure(graph, "activity_and_popularity", alpha=0)
     unmodified_alpha_1_score = graph_measure(graph, "activity_and_popularity", alpha=1)
     unmodified_metro_score = graph_measure(
-        graph, "metro_performance", missed_trips=0, removed_edge_dist=0
+        graph, "metro_performance", missed_trips=0, modified_edge_dist=0
     )
     print("Finished initialization...", str(time.time() - overall_start_time), "sec")
     
@@ -44,7 +44,7 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         # Experiment part 1: Remove an edge
         graph.remove_edge(edge=edge)
         missed, changed_dist, conserved = graph.fill_flows_from_mapped_data(
-            removed_edge=edge, removed_edge_dist=distance, redistribute_flow=False
+            modified_edge=edge, modified_edge_dist=distance, redistribute_flow=False
         )
         missed_trips.append(missed)
         changed_trips.append(changed_dist[0])
@@ -67,29 +67,8 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         # Experiment part 2: Re-insert the edge so that results are comparable
         centralities.append(edge_centralities[edge])
         graph.add_edge(edge=edge, flow=0, capacity=capacity, distance=distance)
-        
-        # Add some logging so that we don't lose hope
-        i += 1
-        # if i == 150:
-        #     break
-        if i % 25 == 0:
-            end_time = time.time() 
-            print(
-                "{0:4}".format(i), ": {0:5.2f}".format(end_time - start_time), "sec", 
-                "  {0:7}".format("{0:,}".format(missed)), "missed", 
-                "  {0:10}".format("{0:.2f}".format(changed_dist[1])), "changed_dist", 
-                "  {0:7}".format("{0:,}".format(conserved)), "conserved"
-            )
-            start_time = time.time()
             
-    end_time = time.time()
-    print("\nSimulation took", "{0:5.2f}".format(end_time - overall_start_time), "seconds\n")
-        
     plot_options = {
-        "flows" : {
-            "x_on_the_plot": flows,
-            "xlabel": "Flow of the Removed Edge"
-        },
         "centralities" : {
             "x_on_the_plot": centralities,
             "xlabel": "Betweenness Centrality of the Removed Edge"
@@ -131,62 +110,146 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
                 title=plot_options[title_key]["title"],
                 file_name=plot_options[title_key]["file_name"] + this_x_axis_data + ".png"
             )
-    
-    # make_plot(
-    #     x=centralities, y=missed_trips, type_of_plot="scatter",
-    #     ylabel="# of Trips That Became Infeasible", 
-    #     xlabel="Centrality of Removed Edge",
-    #     title="Effect of the Centrality on the # of Infeasible Trips",
-    #     file_name="infeasible_trips_against_centrality.png"
-    # )
-    # 
-    # make_plot(
-    #     x=centralities, y=changed_trips_distance, type_of_plot="scatter",
-    #     ylabel="Change in Total Distance Travelled (km)", 
-    #     xlabel="Centrality of Removed Edge",
-    #     title=r"Effect of the Centrality on the $\Delta$ Distance Travelled",
-    #     file_name="changed_trips_against_centrality.png"
-    # )
-    # 
-    # make_plot(
-    #     x=missed_trips, y=changed_trips, type_of_plot="scatter",
-    #     ylabel="# of Trips That Changed Their Path", 
-    #     xlabel="# of Missed Trips After Edge Removal",
-    #     title="Investigating Alternate Paths on the Metro",
-    #     file_name="investigating_alternate_paths_on_metro.png"
-    # )
-    
+                
     # helper_make_plots(y=removal_effects, title_key="metro_performance")
     # helper_make_plots(y=removal_effects_alpha_0, title_key="activity_and_popularity_0")
-    helper_make_plots(y=removal_effects_alpha_1, title_key="activity_and_popularity_1")
+    # helper_make_plots(y=removal_effects_alpha_1, title_key="activity_and_popularity_1")
+
+def add_new_edge(graph, num_edges_to_consider=15, prune_method=None, test_type=None):
+    graph = deepcopy(graph)
     
-    indexes_in_sorted_list = np.argsort(removal_effects)
-        
-    def print_stats(stats_indexes):
-        for index in stats_indexes:
-            print(
-                "{0:60}".format(str(edges_in_order[index])), 
-                " centrality =", "{0:.4f}".format(centralities[index]),  
-                " flow =", flows[index],
-                " length (km) =", "{0:.4f}".format(distances[index]),
-                " effect (%) =", "{0:.4f}".format(removal_effects[index])
-            )
+    # Find all possible edges that can be added to the graph 
+    possible_new_edges = []
+    for node_a in graph.nodes():
+        for node_b in graph.nodes():
+            if node_a != node_b and not graph.has_edge(edge=(node_a, node_b)):
+                possible_new_edges.append((node_a, node_b))
+                
+    unmodified_metro_score = graph_measure(graph, test_type, missed_trips=0, alpha=1)
+    # average_flow = get_typical_attribute_value(graph, attribute_name="flow")
     
-    print_stats(indexes_in_sorted_list[-2:])
-    print_stats(indexes_in_sorted_list[:2])
-    
-    print( 
-        "\nMaximum flow on an edge was", "{0:,}".format(np.max(flows)), "passengers", 
-        "\nMax centrality on an edge was", "{0:.4f}".format(np.max(centralities)),
-        "\nMax length of an edge (section) was", "{0:.4f}".format(np.max(distances)), "km"
+    # Choose a random sample from the edges to serve as a benchmark 
+    shuffle(possible_new_edges)
+    random_edges = sample(possible_new_edges, num_edges_to_consider)
+    shuffle(random_edges)
+    random_results, best_random_result, flows_random = performance_metric_on_addition_of_edge(
+        deepcopy(graph), random_edges, test_type, unmodified_metro_score
     )
     
-def graph_measure(graph, test_type, **kwargs):
+    if prune_method == "prune_edges_by_score":
+        best_n_edges = prune_edges_by_score(
+            graph, possible_new_edges, unmodified_metro_score, num_edges_to_consider,
+            flow="random"
+        )
+    elif prune_method == "prune_edges_by_distance_flow_product":
+        best_n_edges = prune_edges_by_distance_flow_product(graph, num_edges_to_consider)
+    
+    pruned_edges = []
+    for score, edge, flow in best_n_edges:
+        pruned_edges.append(edge)
+
+    shuffle(pruned_edges)
+    pruned_edges = sample(possible_new_edges, num_edges_to_consider)
+    pruned_edge_results, best_pruned_result, flows = performance_metric_on_addition_of_edge(
+        deepcopy(graph), pruned_edges, test_type, unmodified_metro_score
+    )
+        
+    make_plot( 
+        y=pruned_edge_results, y2=random_results, type_of_plot="scatter",
+        y_annotation=flows, y2_annotation=flows_random,
+        ylabel="Percentage Change in Graph Performance", 
+        xlabel="Edge Index", legend=["Top Picks After Pruning", "Randomly Picked Edges"],
+        title="Comparing Effects on Performance from the Pruned Set of Edges",
+        file_name=prune_method + ".png"
+    )
+    print(best_pruned_result)
+    
+def performance_metric_on_addition_of_edge(metro_graph_object, edges, test_type, unmodified_metro_score):
+    best_candidate = (float("inf")*-1, None)
+    record_of_metrics = []
+    flows = []
+    for i, edge in enumerate(edges):
+        distance = metro_graph_object.distance_between_two_nodes(edge[0], edge[1])
+        metro_graph_object.add_edge(edge=edge, flow=0, capacity=80000, distance=distance)
+        missed, changed_dist, conserved = metro_graph_object.fill_flows_from_mapped_data(
+            modified_edge=edge, redistribute_flow=True
+        )
+        measure = graph_measure(metro_graph_object, test_type, alpha=1, missed_trips=missed)
+        measure = ((measure - unmodified_metro_score) / unmodified_metro_score) * (100.0)
+        record_of_metrics.append(measure)
+        flows.append(metro_graph_object.get_edge_attribute(edge=edge, attribute_name="flow"))
+        metro_graph_object.remove_edge(edge=edge)
+        if measure > best_candidate[0]:
+            best_candidate = (measure, edge)
+        if i % 5 == 0: print("Evaluated candidate", i, "score:", measure)
+            
+    return record_of_metrics, best_candidate, flows
+    
+def prune_edges_by_score(graph, possible_new_edges, unmodified_metro_score, 
+    num_edges_to_consider, flow="random"):
+    best_n_candidates = []
+    i = 0
+    for edge in possible_new_edges:
+        if flow == "random":
+            flow = randint(1, 60000)
+        else:
+            flow = flow
+        graph.add_edge(edge=edge, flow=flow)
+        graph.fill_flows_from_mapped_data(
+            modified_edge=edge, modified_edge_dist=1, redistribute_flow=False
+        )
+        estimated_score = graph_measure(graph, "activity_and_popularity", alpha=1)
+        graph.remove_edge(edge=edge)
+        maintain_max_heap(best_n_candidates, num_edges_to_consider, (estimated_score, edge, flow))
+        i += 1
+        if i % 50 == 0: 
+            print("Iteration", i, "best champ...:", best_n_candidates[-1])
+        # if i == 1000:    
+        #     break
+        
+    return best_n_candidates
+
+def maintain_max_heap(heap_list, max_capacity, new_item):
+    if len(heap_list) < max_capacity:
+        heapq.heappush(heap_list, new_item)
+    elif new_item[0] > heapq.nsmallest(1, heap_list)[0][0]:
+        heapq.heappushpop(heap_list, new_item)
+    assert(len(heap_list) <= max_capacity)
+    # return heap_list   
+    
+def prune_edges_by_distance_flow_product(graph, num_edges_to_consider):
+    journeys = graph.journeys
+    best_n_candidates = []
+    i = 0
+    for journey in journeys:
+        # Score = distance of the trip * number of people taking the trip.
+        score = graph.distance_between_two_nodes(journey[0], journey[1]) * journeys[journey]
+        maintain_max_heap(best_n_candidates, num_edges_to_consider, (score, journey, 0))  
+        i += 1
+        if i % 5000 == 0: print("Evaluated", i, "possible edges using distance * flow")
+        
+    print("Found", len(best_n_candidates), "candidates from", len(journeys), "possible edges")  
+    return best_n_candidates
+    
+def get_typical_attribute_value(graph, attribute_name="flow", average="mean"):
+    if average == "mean":
+        running_sum = 0
+        i = 0
+        for edge in graph.edges():
+            i += 1
+            running_sum += graph.get_edge_attribute(edge=edge, attribute_name=attribute_name)
+        
+        return running_sum / i            
+
+def graph_measure(metro_graph_object, test_type, **kwargs):
     if test_type == "activity_and_popularity":
         alpha = kwargs["alpha"]
-        return graph.graph_popularity(alpha=alpha) + graph.graph_activity(alpha=alpha)
+        return metro_graph_object.graph_popularity(alpha=alpha) + metro_graph_object.graph_activity(alpha=alpha)
     elif test_type == "metro_performance":
-        return graph.metro_network_performance(utility_over_cost=10, missed_trips=kwargs["missed_trips"])
+        return metro_graph_object.metro_network_performance(utility_over_cost=10, missed_trips=kwargs["missed_trips"])
+    else:
+        raise ValueError("Please provide a valid test.")
+    
 
 def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, 
     type_of_plot=None, file_name=None, **kwargs):
@@ -195,12 +258,22 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None,
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
-    if type_of_plot == "line":
-        plt.plot(x, y)
-    elif type_of_plot == "scatter":
+    
+    x2 = None
+    
+    if x is None:
+        x = list(range(1, len(y)+1))
+        
+    if type_of_plot == "scatter":
         plt.scatter(x, y, c="b")
         if "y2" in kwargs:
-            plt.scatter(x, kwargs["y2"], c="r")
+            try:
+                plt.scatter(x, kwargs["y2"], c="r")
+                x2 = x
+            except ValueError:
+                x2 = list(range(1, len(kwargs["y2"])))
+                plt.scatter(x2, kwargs["y2"], c="r")
+                
         if "y3" in kwargs:
             plt.scatter(x, kwargs["y3"], c="g")
     else:
@@ -209,18 +282,37 @@ def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None,
     if "legend" in kwargs:
         plt.legend(kwargs["legend"], loc="best")
     
+    if "y_annotation" in kwargs:
+        try:
+            for i, (score, edge, flow) in enumerate(kwargs["y_annotation"]):
+                plt.annotate(flow, (x[i], y[i]))
+        except (ValueError, TypeError):
+            for i, flow in enumerate(kwargs["y_annotation"]):
+                plt.annotate(flow, (x[i], y[i]))
+                
+    if "y2_annotation" in kwargs:
+        try:
+            for i, (score, edge, flow) in enumerate(kwargs["y2_annotation"]):
+                plt.annotate(flow, (x2[i], kwargs["y2"][i]))
+        except (ValueError, TypeError):
+            for i, flow in enumerate(kwargs["y2_annotation"]):
+                plt.annotate(flow, (x2[i], kwargs["y2"][i]))
+                
+    
     if file_name is not None:
         plt.savefig("images/"+file_name, format="png")
         
     plt.show()
     
 def main():
+    start_time = time.time()
+    print("Initializing metro graph...")
     graph = metro_graph()
-    delete_one_edge_and_evaluate(
-        graph, test_type="activity_and_popularity", alpha=1,
-        x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
+    print("Done!", str(time.time() - start_time), "sec")
+    add_new_edge(
+        graph, prune_method="prune_edges_by_distance_flow_product",
+        test_type="metro_performance"
     )
-    
 
 if __name__ == "__main__":
     main()
