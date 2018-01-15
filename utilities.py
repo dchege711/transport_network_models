@@ -25,6 +25,7 @@ file_locations = {
     # Pickle files containing python data objects
     "metro_graph.pkl" : "pickle_files",
     "station_kdtree.pkl" : "pickle_files",
+    "metro_graph_with_flows.pkl" : "pickle_files",
     "average_ridership_dict.pkl" : "pickle_files",
     "journey_counts.pkl" : "pickle_files",
     "journey_counts_test.pkl" : "pickle_files",
