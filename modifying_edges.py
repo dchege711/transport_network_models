@@ -55,9 +55,11 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         measure = graph_measure(graph, "activity_and_popularity", alpha=0)
         effect = ((measure - unmodified_alpha_0_score)/unmodified_alpha_0_score)*100.0
         removal_effects_alpha_0.append(effect)
+        
         measure = graph_measure(graph, "activity_and_popularity", alpha=1)
         effect = ((measure - unmodified_alpha_1_score)/unmodified_alpha_1_score)*100.0
         removal_effects_alpha_1.append(effect)
+        
         measure = graph_measure(graph, "metro_performance", missed_trips=missed)
         effect = ((measure - unmodified_metro_score)/unmodified_metro_score)*100.0
         removal_effects.append(effect)
@@ -102,23 +104,28 @@ def delete_one_edge_and_evaluate(graph, test_type=None,
         },
         "metro_performance": {
             "title": "Effect on Utility/Cost Analysis of Removing a Link",
-            "file_name": "metro_performance_"
+            "file_name": "metro_performance_",
+            "y_on_the_plot": removal_effects
         },
         "activity_and_popularity_0": {
             "title": r"Effect of Removing a Link, $\alpha$ = " + str(0) + " (emphasizes degree over flow)",
-            "file_name": "activity_and_popularity_alpha_" + str(0) + "_"
+            "file_name": "activity_and_popularity_alpha_" + str(0) + "_",
+            "y_on_the_plot": removal_effects_alpha_0
         },
         "activity_and_popularity_1": {
             "title": r"Effect of Removing a Link, $\alpha$ = " + str(1) + " (emphasizes flow over degree)",
-            "file_name": "activity_and_popularity_alpha_" + str(1) + "_"
+            "file_name": "activity_and_popularity_alpha_" + str(1) + "_",
+            "y_on_the_plot": removal_effects_alpha_1
         }
     }
     
+    # x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
     def helper_make_plots(y=None, title_key=None):
         for this_x_axis_data in x_axis_data:
             make_plot(
                 x=plot_options[this_x_axis_data]["x_on_the_plot"], 
-                y=removal_effects, type_of_plot="scatter",
+                y=plot_options[title_key]["y_on_the_plot"], 
+                type_of_plot="scatter",
                 ylabel="Percentage Change in Graph Performance", 
                 xlabel=plot_options[this_x_axis_data]["xlabel"],
                 title=plot_options[title_key]["title"],
@@ -183,6 +190,7 @@ def graph_measure(graph, test_type, **kwargs):
 
 def make_plot(x=None, y=None, xlabel=None, ylabel=None, title=None, 
     type_of_plot=None, file_name=None, **kwargs):
+    plt.figure(1)
     plt.grid(True)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -212,10 +220,6 @@ def main():
         graph, test_type="activity_and_popularity", alpha=1,
         x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
     )
-    # delete_one_edge_and_evaluate(
-    #     graph, test_type="metro_performance",
-    #     x_axis_data=["flows", "centralities", "distances", "num_missed_trips"]
-    # )
     
 
 if __name__ == "__main__":
