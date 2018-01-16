@@ -18,13 +18,7 @@ import time
 class metro_graph():
     
     def __init__(self):
-        self.G = nx.DiGraph()
-        # SAM
-        # Expecting a dict with keys as a (origin_station, destination_station)
-        # and the value being how many people are taking that trip.
-        journey_dict_file_name = 'journey_counts.pkl'
-        input_path = ut.get_path(journey_dict_file_name)
-        input_file = open(input_path,'rb')
+        input_file = open(ut.get_path('journey_counts.pkl'),'rb')
         self.journeys = pickle.load(input_file)
         input_file.close()
         
@@ -35,6 +29,8 @@ class metro_graph():
                 journeys_to_pop.append(journey)
         for journey in journeys_to_pop:
             self.journeys.pop(journey) 
+        
+        self.G = nx.DiGraph()
         
         # Add the stations as nodes
         for line in open(ut.get_path("nodes_with_latlng_updated.txt"), "r"):
@@ -58,14 +54,12 @@ class metro_graph():
             elist.extend([(stations[i], stations[i+1]) for i in range(len(stations) - 1)])
             # second direction of edge
             elist.extend([(stations[i+1], stations[i]) for i in range(len(stations) - 1)])
-
             self.G.add_edges_from(elist)
             
-        # self.store_as_pickle()
         self._set_distances_as_edge_attributes()
         
         # Cache the routes followed by each journey since fill_flows_from_mapped_data()
-        # has poor performance (~50 seconds per run)
+        # has poor performance (~20 seconds per run)
         self.previous_path_for_journeys = {}
         self.previous_path_lengths_for_journeys = {}
         for journey in self.journeys:
@@ -76,11 +70,10 @@ class metro_graph():
         for edge in self.edges():
             self.add_attribute_to_edge(edge=edge, capacity=80000, flow=0)
         
-        self.num_total_trips = 0
+        self.num_total_trips = None # Will be overwritten later
         results = self.fill_flows_from_mapped_data(cache_result=True) 
         assert results[0] == 0, "Expected 0 missed trips. Received {0}".format(results[0])
-        
-        # self.store_as_pickle()
+
     
     def add_node(self, node, **kwargs):
         self.G.add_node(node, kwargs)
@@ -172,8 +165,6 @@ class metro_graph():
         # The change is measured against the initial complete graph with all edges
         all_shortest_paths = nx.shortest_path(self.G, weight="distance")
         all_shortest_paths_lengths = nx.shortest_path_length(self.G, weight="distance")
-        
-        # Investigate how the changed paths have affected the flow
         num_missed_trips, changed_trips_distance = 0, 0
         num_conserved_trips, num_changed_trips = 0, 0
         
@@ -183,24 +174,20 @@ class metro_graph():
                 # If this doesn't lead to an exception, then the journey is still feasible
                 shortest_path = all_shortest_paths[journey[0]][journey[1]]
                 shortest_path_length = all_shortest_paths_lengths[journey[0]][journey[1]]
-                
                 # If this journey still follows the original path, note that down, and then skip
                 if shortest_path == self.previous_path_for_journeys[journey]:
                     num_conserved_trips += flow
                     continue
-                
                 else:
                     # The journey has a new path... 
                     previous_shortest_path = self.previous_path_for_journeys[journey]
                     previous_shortest_path_length = self.previous_path_lengths_for_journeys[journey]
-                    
                     # If we wish to later analyze individual flows in the network...
                     if redistribute_flow:
                         # ... add the flow in this journey to the new shortest path
                         for i in range(len(shortest_path) - 1):
                             edge = (shortest_path[i], shortest_path[i+1])
                             self._helper_for_adjusting_flow(edge, flow)
-                            
                         # ... subtract the flow of this journey from its previous shortest path
                         negated_flow = flow * -1
                         for i in range(len(previous_shortest_path) - 1):
@@ -208,12 +195,10 @@ class metro_graph():
                             if edge == modified_edge:
                                 continue
                             self._helper_for_adjusting_flow(edge, negated_flow)
-                        
                     # If we wish to store these as the default values, then do so
                     if cache_result:
                         self.previous_path_for_journeys[journey] = shortest_path
                         self.previous_path_lengths_for_journeys[journey] = shortest_path_length
-                        
                     # Note how much the distance has changed for this journey 
                     num_changed_trips += flow
                     changed_trips_distance += shortest_path_length * flow

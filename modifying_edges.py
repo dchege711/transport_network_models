@@ -206,8 +206,7 @@ def performance_metric_on_addition_of_edge(metro_graph_object, edges, test_type,
 def prune_edges_by_score(graph, possible_new_edges, unmodified_metro_score, 
     num_edges_to_consider, flow="random"):
     best_n_candidates = []
-    i = 0
-    for edge in possible_new_edges:
+    for i, edge in enumerate(possible_new_edges):
         if flow == "random":
             flow = randint(1, 60000)
         else:
@@ -222,9 +221,6 @@ def prune_edges_by_score(graph, possible_new_edges, unmodified_metro_score,
         i += 1
         if i % 50 == 0: 
             print("Iteration", i, "best champ...:", best_n_candidates[-1])
-        # if i == 1000:    
-        #     break
-        
     return best_n_candidates
 
 def maintain_max_heap(heap_list, max_capacity, new_item):
@@ -232,8 +228,7 @@ def maintain_max_heap(heap_list, max_capacity, new_item):
         heapq.heappush(heap_list, new_item)
     elif new_item[0] > heapq.nsmallest(1, heap_list)[0][0]:
         heapq.heappushpop(heap_list, new_item)
-    assert(len(heap_list) <= max_capacity)
-    # return heap_list   
+    assert(len(heap_list) <= max_capacity)   
     
 def prune_edges_by_distance_flow_product(graph, num_edges_to_consider):
     journeys = graph.journeys
@@ -264,7 +259,9 @@ def graph_measure(metro_graph_object, test_type, **kwargs):
         alpha = kwargs["alpha"]
         return metro_graph_object.graph_popularity(alpha=alpha) + metro_graph_object.graph_activity(alpha=alpha)
     elif test_type == "metro_performance":
-        return metro_graph_object.metro_network_performance(utility_over_cost=10, missed_trips=kwargs["missed_trips"])
+        return metro_graph_object.metro_network_performance(
+            utility_over_cost=2, missed_trips=kwargs["missed_trips"]
+        )
     elif test_type == "shortest_paths":
         return metro_graph_object.total_shortest_paths()
     else:
